@@ -18,7 +18,6 @@ class PasswordResetController extends Controller
      */
     public function sendResetLinkEmail(Request $request)
     {
-        // Validate email
         $request->validate([
             'email' => 'required|email|exists:users,email',
         ]);
@@ -30,17 +29,18 @@ class PasswordResetController extends Controller
 
         // Tạo token ngẫu nhiên
         $token = Str::random(60);
+        $hashedToken = Hash::make($token); // Hash token trước khi lưu
 
-        // Lưu token vào bảng password_reset_tokens
+        // Lưu hashed token vào DB
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $request->email],
             [
-                'token' => $token,
+                'token' => $hashedToken,
                 'created_at' => Carbon::now()
             ]
         );
 
-        // Gửi email sử dụng Mailable
+        // Gửi token gốc (chưa hash) qua email
         Mail::to($request->email)->send(new ResetPasswordMail($request->email, $token));
 
         return response()->json(['message' => 'Đã gửi email đặt lại mật khẩu!']);
@@ -51,26 +51,25 @@ class PasswordResetController extends Controller
      */
     public function reset(Request $request)
     {
-        // Validate dữ liệu đầu vào
         $request->validate([
             'email' => 'required|email|exists:users,email',
             'token' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        // Kiểm tra token hợp lệ
+        // Lấy record với token đã hash
         $reset = DB::table('password_reset_tokens')
             ->where('email', $request->email)
-            ->where('token', $request->token)
             ->first();
 
-        if (!$reset) {
+        // So sánh token gửi lên với token đã hash trong DB
+        if (!$reset || !Hash::check($request->token, $reset->token)) {
             return response()->json(['error' => 'Token không hợp lệ hoặc đã hết hạn'], 400);
         }
 
-        // Đặt lại mật khẩu cho user
+        // Cập nhật mật khẩu (sẽ tự động hash nhờ $casts trong Model)
         $user = User::where('email', $request->email)->first();
-        $user->password = $request->password; // Laravel 10 sẽ tự hash nhờ $casts
+        $user->password = $request->password;
         $user->save();
 
         // Xóa token sau khi dùng
@@ -79,3 +78,6 @@ class PasswordResetController extends Controller
         return response()->json(['message' => 'Đặt lại mật khẩu thành công!']);
     }
 }
+
+
+
