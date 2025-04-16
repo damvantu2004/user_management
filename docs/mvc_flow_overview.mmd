@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant Client
+    participant Route
+    participant Controller
+    participant Model
+    participant MailView
+
+    Client->>Route: Request tới API (VD: /api/register)
+    Route->>Controller: Điều hướng tới Controller phù hợp
+    Controller->>Model: Tương tác dữ liệu (tạo/tìm user, tạo token...) 
+    Controller->>MailView: (Nếu gửi mail) Gửi dữ liệu sang Mail + Render Blade template
+    Controller->>Client: Trả về JSON response hoặc redirect

@@ -114,7 +114,10 @@ Dự án này là một API quản lý người dùng được xây dựng bằn
 - token (string)
 - created_at (timestamp)
 
-
+### Bảng email_verification_tokens
+- email (primary key)
+- token (string)
+- created_at (timestamp)
 
 ## Bảo mật
 

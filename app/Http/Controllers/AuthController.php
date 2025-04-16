@@ -33,7 +33,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => $request->password,
+            'password' => $request->password, // Mật khẩu sẽ tự động hash do $casts trong Model
             'role' => 'user',
             'is_active' => false,
             'email_verified_at' => null,
@@ -135,7 +135,7 @@ class AuthController extends Controller
     /**
      * Trả về response chuẩn với JWT token.
      */
-    protected function respondWithToken($token)
+    protected function respondWithToken($token) // $token là JWT token
     {
         return response()->json([
             'access_token' => $token,
