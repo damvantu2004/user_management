@@ -2,67 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @OA\Tag(name="Users", description="Operations about users")
- * 
- * @OA\Schema(
- *     schema="PaginationLinks",
- *     type="object",
- *     @OA\Property(property="first", type="string"),
- *     @OA\Property(property="last", type="string"),
- *     @OA\Property(property="prev", type="string", nullable=true),
- *     @OA\Property(property="next", type="string", nullable=true)
- * )
- * 
- * @OA\Schema(
- *     schema="PaginationMeta",
- *     type="object",
- *     @OA\Property(property="current_page", type="integer"),
- *     @OA\Property(property="per_page", type="integer"),
- *     @OA\Property(property="total", type="integer")
- * )
  */
 class UserController extends Controller
 {
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     /**
-     * Hiển thị danh sách tất cả người dùng
-     * 
-     * @return \Illuminate\Http\JsonResponse
-     * 
      * @OA\Get(
      *     path="/api/users",
      *     summary="Lấy danh sách người dùng",
      *     tags={"Users"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="page", in="query", description="Trang số", @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="per_page", in="query", description="Số item mỗi trang", @OA\Schema(type="integer", default=10)),
+     *     @OA\Parameter(name="role", in="query", description="Lọc theo role", @OA\Schema(type="string", enum={"admin","user"})),
+     *     @OA\Parameter(name="is_active", in="query", description="Lọc theo trạng thái", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="search", in="query", description="Tìm kiếm theo tên hoặc email", @OA\Schema(type="string")),
      *     @OA\Response(
      *         response=200,
-     *         description="Danh sách người dùng phân trang",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/User")),
-     *             @OA\Property(property="links", ref="#/components/schemas/PaginationLinks"),
-     *             @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta")
-     *         )
+     *         description="Danh sách người dùng phân trang"
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Lấy tất cả user và phân trang kết quả
-        $users = User::paginate(10);
+        $filters = $request->only(['role', 'is_active', 'search']);
+        $perPage = $request->input('per_page', 10);
+        $users = $this->userService->getAllUsers($filters, $perPage);
         return $this->successResponse($users, 'Lấy danh sách người dùng thành công');
     }
 
     /**
-     * Lưu trữ người dùng mới vào database
-     * 
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     * 
      * @OA\Post(
      *     path="/api/users",
      *     summary="Tạo người dùng mới",
@@ -72,20 +55,18 @@ class UserController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name","email","password"},
-     *             @OA\Property(property="name", type="string", example="Nguyễn Văn B"),
-     *             @OA\Property(property="email", type="string", format="email", example="newuser@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="role", type="string", enum={"admin","user"}, example="user"),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="password", type="string", format="password"),
+     *             @OA\Property(property="role", type="string", enum={"admin","user"}),
+     *             @OA\Property(property="is_active", type="boolean")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Tạo người dùng thành công", @OA\JsonContent(ref="#/components/schemas/User")),
-     *     @OA\Response(response=422, description="Dữ liệu không hợp lệ")
+     *     @OA\Response(response=201, description="Tạo người dùng thành công")
      * )
      */
     public function store(Request $request)
     {
-        // Validate dữ liệu đầu vào
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -98,51 +79,31 @@ class UserController extends Controller
             return $this->validationErrorResponse($validator->errors());
         }
 
-        // Tạo người dùng mới
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role' => $request->role ?? 'user',
-            'is_active' => $request->is_active ?? true,
-        ]);
-
+        $user = $this->userService->createUser($request->all());
         return $this->createdResponse($user, 'Tạo người dùng thành công');
     }
 
     /**
-     * Hiển thị thông tin chi tiết của một người dùng
-     * 
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     * 
      * @OA\Get(
      *     path="/api/users/{id}",
      *     summary="Lấy thông tin chi tiết người dùng",
      *     tags={"Users"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Thông tin người dùng", @OA\JsonContent(ref="#/components/schemas/User")),
-     *     @OA\Response(response=404, description="Không tìm thấy người dùng")
+     *     @OA\Response(response=200, description="Thông tin người dùng")
      * )
      */
     public function show($id)
     {
-        $user = User::find($id);
-        if (!$user) {
-            return $this->notFoundResponse('Không tìm thấy người dùng');
+        try {
+            $user = $this->userService->findUser($id);
+            return $this->successResponse($user, 'Lấy thông tin người dùng thành công');
+        } catch (ValidationException $e) {
+            return $this->notFoundResponse($e->getMessage());
         }
-        
-        return $this->successResponse($user, 'Lấy thông tin người dùng thành công');
     }
 
     /**
-     * Cập nhật thông tin người dùng
-     * 
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     * 
      * @OA\Put(
      *     path="/api/users/{id}",
      *     summary="Cập nhật thông tin người dùng",
@@ -152,68 +113,66 @@ class UserController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="Updated Name"),
-     *             @OA\Property(property="email", type="string", format="email", example="updated@example.com"),
-     *             @OA\Property(property="role", type="string", enum={"admin","user"}, example="admin"),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string", format="email"),
+     *             @OA\Property(property="role", type="string", enum={"admin","user"}),
+     *             @OA\Property(property="is_active", type="boolean")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Cập nhật thành công", @OA\JsonContent(ref="#/components/schemas/User")),
-     *     @OA\Response(response=404, description="Không tìm thấy người dùng"),
-     *     @OA\Response(response=422, description="Dữ liệu không hợp lệ")
+     *     @OA\Response(response=200, description="Cập nhật thành công")
      * )
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): JsonResponse
     {
-        $user = User::find($id);
-        if (!$user) {
+        try {
+            $validatedData = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255',
+                'role' => 'sometimes|in:admin,user',
+                'is_active' => 'sometimes|boolean'
+            ]);
+
+            $user = $this->userService->updateUser($id, $validatedData);
+            return $this->successResponse($user, 'Cập nhật thông tin người dùng thành công');
+
+        } catch (ModelNotFoundException $e) {
             return $this->notFoundResponse('Không tìm thấy người dùng');
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e->errors());
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('Có lỗi xảy ra khi cập nhật người dùng');
         }
-
-        // Validate dữ liệu đầu vào
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
-            'role' => 'sometimes|in:admin,user',
-            'is_active' => 'sometimes|boolean',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->validationErrorResponse($validator->errors());
-        }
-
-        // Cập nhật thông tin người dùng
-        $user->update($request->only(['name', 'email', 'role', 'is_active']));
-
-        return $this->successResponse($user, 'Cập nhật thông tin người dùng thành công');
     }
 
     /**
-     * Xóa người dùng khỏi hệ thống
-     * 
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     * 
      * @OA\Delete(
      *     path="/api/users/{id}",
      *     summary="Xóa người dùng",
      *     tags={"Users"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=204, description="Xóa thành công"),
-     *     @OA\Response(response=404, description="Không tìm thấy người dùng")
+     *     @OA\Response(response=200, description="Xóa thành công")
      * )
      */
     public function destroy($id)
     {
-        $user = User::find($id);
-        if (!$user) {
+        try {
+            $this->userService->deleteUser($id);
+            return $this->successResponse(null, 'Xóa người dùng thành công');
+        } catch (ModelNotFoundException $e) {
             return $this->notFoundResponse('Không tìm thấy người dùng');
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e->errors());
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('Có lỗi xảy ra khi xóa người dùng');
         }
-
-        $user->delete();
-
-        return $this->successResponse(null, 'Xóa người dùng thành công', 200);
     }
 }
+
+
+
+
+
+
+
 

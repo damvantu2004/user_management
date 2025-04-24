@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use App\Mail\ResetPasswordMail;
 use Illuminate\Support\Facades\Validator;
+use App\Services\PasswordResetService;
 
 /**
+ * Controller xử lý các chức năng liên quan đến đặt lại mật khẩu
+ * 
  * @OA\Tag(
  *     name="Authentication",
  *     description="User authentication and password reset endpoints"
@@ -21,6 +17,21 @@ use Illuminate\Support\Facades\Validator;
 class PasswordResetController extends Controller
 {
     /**
+     * Service xử lý logic đặt lại mật khẩu
+     */
+    protected $passwordResetService;
+
+    /**
+     * Khởi tạo controller với dependency injection
+     */
+    public function __construct(PasswordResetService $passwordResetService)
+    {
+        $this->passwordResetService = $passwordResetService;
+    }
+
+    /**
+     * Gửi email chứa token đặt lại mật khẩu
+     * 
      * @OA\Post(
      *     path="/api/password/email",
      *     summary="Gửi email chứa token đặt lại mật khẩu",
@@ -49,39 +60,26 @@ class PasswordResetController extends Controller
      *         )
      *     )
      * )
-     * Gửi email chứa token đặt lại mật khẩu cho user (chỉ cho user đã xác thực email).
      */
     public function sendResetLinkEmail(Request $request)
     {
+        // Validate đầu vào
         $request->validate([
             'email' => 'required|email|exists:users,email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
-        if (!$user || !$user->email_verified_at) {
-            return $this->errorResponse('Email chưa được xác thực!', 400);
+        try {
+            // Gọi service để xử lý logic gửi email
+            $result = $this->passwordResetService->sendResetLink($request->email);
+            return $this->successResponse(null, $result['message']);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
         }
-
-        // Tạo token ngẫu nhiên
-        $token = Str::random(60);
-        $hashedToken = Hash::make($token);
-
-        // Lưu hashed token vào DB
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->email],
-            [
-                'token' => $hashedToken,
-                'created_at' => Carbon::now()
-            ]
-        );
-
-        // Gửi token gốc (chưa hash) qua email
-        Mail::to($request->email)->send(new ResetPasswordMail($request->email, $token));
-
-        return $this->successResponse(null, 'Đã gửi email đặt lại mật khẩu!');
     }
 
     /**
+     * Đặt lại mật khẩu bằng token
+     * 
      * @OA\Post(
      *     path="/api/password/reset",
      *     summary="Đặt lại mật khẩu bằng token",
@@ -111,60 +109,35 @@ class PasswordResetController extends Controller
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Token không hợp lệ hoặc đã hết hạn")
      *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Lỗi validate dữ liệu",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Lỗi validate"),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 @OA\Property(
-     *                     property="field_name",
-     *                     type="array",
-     *                     @OA\Items(type="string", example="Lỗi cụ thể")
-     *                 )
-     *             )
-     *         )
      *     )
      * )
-     * Đặt lại mật khẩu bằng token.
      */
     public function reset(Request $request)
     {
+        // Validate đầu vào với các quy tắc cụ thể
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
             'token' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
+        // Trả về lỗi nếu validate thất bại
         if ($validator->fails()) {
             return $this->validationErrorResponse($validator->errors());
         }
 
-        // Lấy record với token đã hash
-        $reset = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->first();
-
-        // So sánh token gửi lên với token đã hash trong DB
-        if (!$reset || !Hash::check($request->token, $reset->token)) {
-            return $this->errorResponse('Token không hợp lệ hoặc đã hết hạn', 400);
+        try {
+            // Gọi service để xử lý logic đặt lại mật khẩu
+            $result = $this->passwordResetService->resetPassword($request->all());
+            return $this->successResponse(null, $result['message']);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
         }
-
-        // Cập nhật mật khẩu (sẽ tự động hash nhờ $casts trong Model)
-        $user = User::where('email', $request->email)->first();
-        $user->password = $request->password;
-        $user->save();
-
-        // Xóa token sau khi dùng
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-
-        return $this->successResponse(null, 'Đặt lại mật khẩu thành công!');
     }
 }
+
+
+
 
 
 
