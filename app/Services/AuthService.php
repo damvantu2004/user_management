@@ -62,11 +62,11 @@ class AuthService
     public function verifyEmail(array $data): array
     {
         $key = 'verify_email_' . $data['email'];
-        
+
         if (RateLimiter::tooManyAttempts($key, self::MAX_VERIFY_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
-                'email' => ['Quá nhiều lần thử. Vui lòng đợi ' . ceil($seconds/60) . ' phút.']
+                'email' => ['Quá nhiều lần thử. Vui lòng đợi ' . ceil($seconds / 60) . ' phút.']
             ]);
         }
 
@@ -141,9 +141,9 @@ class AuthService
     {
         $user = Auth::guard('api')->user();
         Auth::guard('api')->logout();
-        
+
         Log::info('User logged out', ['user_id' => $user->id]);
-        
+
         return [
             'message' => 'Đăng xuất thành công'
         ];
@@ -153,9 +153,9 @@ class AuthService
     {
         $token = Auth::guard('api')->refresh();
         $user = Auth::guard('api')->user();
-        
+
         Log::info('Token refreshed', ['user_id' => $user->id]);
-        
+
         return $this->generateTokenResponse($token, $user);
     }
 
@@ -169,7 +169,7 @@ class AuthService
         if (RateLimiter::tooManyAttempts($this->throttleKey($email), self::MAX_LOGIN_ATTEMPTS)) {
             $seconds = RateLimiter::availableIn($this->throttleKey($email));
             throw ValidationException::withMessages([
-                'email' => ['Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau ' . ceil($seconds/60) . ' phút.'],
+                'email' => ['Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau ' . ceil($seconds / 60) . ' phút.'],
             ]);
         }
     }
@@ -181,10 +181,10 @@ class AuthService
 
     private function setTokenLifetime(bool $remember): void
     {
-        $ttl = $remember 
+        $ttl = $remember
             ? config('jwt.refresh_ttl')
             : config('jwt.ttl');
-        
+
         Auth::guard('api')->factory()->setTTL($ttl);
     }
 
@@ -209,11 +209,3 @@ class AuthService
         ];
     }
 }
-
-
-
-
-
-
-
-

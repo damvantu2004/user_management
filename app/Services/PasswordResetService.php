@@ -29,7 +29,7 @@ class PasswordResetService
         // Kiểm tra user có tồn tại và đã xác thực email chưa
         $user = User::where('email', $email)->first();
         if (!$user || !$user->email_verified_at) {
-            throw new \Exception('Email chưa được xác thực!', 400);
+            throw new \Exception('Email không hợp lệ', 400);
         }
 
         // Tạo token ngẫu nhiên và hash token

@@ -12,6 +12,13 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        return $request->expectsJson() ? null : route('login');
+        return null;
+    }
+    protected function unauthenticated($request, array $guards)
+    {
+        abort(response()->json([
+            'status' => 'error',
+            'message' => 'Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn'
+        ], 401));
     }
 }

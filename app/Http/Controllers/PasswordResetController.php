@@ -64,10 +64,15 @@ class PasswordResetController extends Controller
     public function sendResetLinkEmail(Request $request)
     {
         // Validate đầu vào
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
+        // validate dữ liệu đầu vào 
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
         ]);
 
+        // phát hiện lỗi không có email thì trả vẻ response luôn tránh lỗi 500
+        if ($validator->fails()) {
+            return $this->validationErrorResponse($validator->errors());
+        }
         try {
             // Gọi service để xử lý logic gửi email
             $result = $this->passwordResetService->sendResetLink($request->email);
@@ -135,12 +140,3 @@ class PasswordResetController extends Controller
         }
     }
 }
-
-
-
-
-
-
-
-
-
