@@ -13,7 +13,9 @@ use App\Http\Controllers\PasswordResetController;
 | Những routes này có thể truy cập mà không cần đăng nhập
 | Bao gồm: đăng ký, đăng nhập, xác thực email, quên mật khẩu
 */
-Route::post('register', [AuthController::class, 'register']); // Đăng ký tài khoản mới
+
+
+Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1'); // Đăng ký tài khoản mới, 5 lần trong 1 phút
 Route::get('verify-email', [AuthController::class, 'verifyEmail']); // Xác thực email
 Route::post('login', [AuthController::class, 'login']); // Đăng nhập
 Route::post('password/forgot', [PasswordResetController::class, 'sendResetLinkEmail']); // Gửi email quên mật khẩu

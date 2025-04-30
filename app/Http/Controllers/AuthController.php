@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -16,10 +17,12 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'captcha' => 'required|string',
         ],
         'login' => [
             'email' => 'required|string|email',
             'password' => 'required|string',
+            'captcha' => 'required|string',
             'remember' => 'sometimes|boolean',
         ],
         'verify_email' => [
@@ -31,7 +34,7 @@ class AuthController extends Controller
     public function __construct(AuthService $authService)
     {
         $this->authService = $authService;
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'verifyEmail']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'verifyEmail']]); 
     }
 
     /**
@@ -66,6 +69,11 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return $this->validationErrorResponse($validator->errors());
+        }
+        
+        // Kiểm tra captcha
+        if (!$this->verifyCaptcha($request->input('captcha'))) {
+            return $this->errorResponse('Captcha không hợp lệ', 422);
         }
 
         $result = $this->authService->register($request->all());
@@ -140,6 +148,11 @@ class AuthController extends Controller
                     422,
                     $validator->errors()
                 );
+            }
+            
+            // Kiểm tra captcha
+            if (!$this->verifyCaptcha($request->input('captcha'))) {
+                return $this->errorResponse('Captcha không hợp lệ', 422);
             }
 
             $remember = $request->boolean('remember', false);
@@ -220,10 +233,25 @@ class AuthController extends Controller
         $user = $this->authService->me();
         return $this->successResponse($user, 'Thông tin người dùng hiện tại');
     }
+    
+    /**
+     * Hàm verifyCaptcha xác thực Google reCAPTCHA v2 hoặc v3
+     * Return true nếu captcha hợp lệ
+     */
+    protected function verifyCaptcha($captchaToken)
+    {
+        // Đặt đây là secret key reCAPTCHA phía server (tạo ở Google reCAPTCHA site)
+        $secret = env('GOOGLE_RECAPTCHA_SECRET'); // lấy từ env
+        if (empty($secret) || empty($captchaToken)) return false;
+
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [ // đây là url xác thực reCAPTCHA
+            'secret' => $secret,
+            'response' => $captchaToken,
+            // 'remoteip'=> request()->ip(), // tùy nếu muốn check IP
+        ]);
+
+        $json = $response->json();
+
+        return $json['success'] ?? false;
+    }
 }
-
-
-
-
-
-
