@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\AuthService;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -232,5 +233,21 @@ class AuthController extends Controller
     {
         $user = $this->authService->me();
         return $this->successResponse($user, 'Thông tin người dùng hiện tại');
+    }
+    protected function verifyCaptcha($captchaToken)
+    {
+        // Đặt đây là secret key reCAPTCHA phía server (tạo ở Google reCAPTCHA site)
+        $secret = env('GOOGLE_RECAPTCHA_SECRET'); // lấy từ env
+        if (empty($secret) || empty($captchaToken)) return false;
+
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [ // đây là url xác thực reCAPTCHA
+            'secret' => $secret,
+            'response' => $captchaToken,
+            // 'remoteip'=> request()->ip(), // tùy nếu muốn check IP
+        ]);
+
+        $json = $response->json();
+
+        return $json['success'] ?? false;
     }
 }

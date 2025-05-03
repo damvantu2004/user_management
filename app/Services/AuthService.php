@@ -112,7 +112,7 @@ class AuthService
 
     public function login(array $credentials, bool $remember = false): array
     {
-        $this->checkTooManyAttempts($credentials['email']); 
+        $this->checkTooManyAttempts($credentials['email']);
         $this->setTokenLifetime($remember);
 
         if (!$token = Auth::guard('api')->attempt($credentials)) {
