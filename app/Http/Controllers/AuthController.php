@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -17,10 +16,12 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'captcha' => 'required|string',
         ],
         'login' => [
             'email' => 'required|string|email',
             'password' => 'required|string',
+            'captcha' => 'required|string',
             'remember' => 'sometimes|boolean',
         ],
         'verify_email' => [
@@ -67,6 +68,11 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return $this->validationErrorResponse($validator->errors());
+        }
+
+        // Kiểm tra captcha
+        if (!$this->verifyCaptcha($request->input('captcha'))) {
+            return $this->errorResponse('Captcha không hợp lệ', 422);
         }
 
         $result = $this->authService->register($request->all());
@@ -142,6 +148,11 @@ class AuthController extends Controller
                     422,
                     $validator->errors()
                 );
+            }
+
+            // Kiểm tra captcha
+            if (!$this->verifyCaptcha($request->input('captcha'))) {
+                return $this->errorResponse('Captcha không hợp lệ', 422);
             }
 
             $remember = $request->boolean('remember', false);

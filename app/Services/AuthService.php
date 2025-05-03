@@ -112,7 +112,7 @@ class AuthService
 
     public function login(array $credentials, bool $remember = false): array
     {
-        $this->checkTooManyAttempts($credentials['email']);
+        $this->checkTooManyAttempts($credentials['email']); 
         $this->setTokenLifetime($remember);
 
         if (!$token = Auth::guard('api')->attempt($credentials)) {
@@ -176,7 +176,9 @@ class AuthService
 
     private function throttleKey(string $email): string
     {
-        return strtolower($email) . '|' . request()->ip();
+        return strtolower($email) . '|' . request()->ip();  // chặn theo email và ip
+        //return strtolower($email); //chỉ chặn theo email
+        //return strtolower (request()->ip()); // chỉ chặn theo ip
     }
 
     private function setTokenLifetime(bool $remember): void
