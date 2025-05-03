@@ -22,23 +22,23 @@ class UserService
     public function getAllUsers(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
         $query = User::query();
-        
+
         // Apply filters if provided
         if (isset($filters['role'])) {
             $query->where('role', $filters['role']);
         }
-        
+
         if (isset($filters['is_active'])) {
             $query->where('is_active', $filters['is_active']);
         }
-        
+
         if (isset($filters['search'])) {
-            $query->where(function($q) use ($filters) {
+            $query->where(function ($q) use ($filters) {
                 $q->where('name', 'like', "%{$filters['search']}%")
-                  ->orWhere('email', 'like', "%{$filters['search']}%");
+                    ->orWhere('email', 'like', "%{$filters['search']}%");
             });
         }
-        
+
         return $query->paginate($perPage);
     }
 
@@ -92,7 +92,7 @@ class UserService
     {
         return DB::transaction(function () use ($id, $data) {
             $user = $this->findUser($id);
-            
+
             // Prevent changing email to one that's already taken
             if (isset($data['email']) && $data['email'] !== $user->email) {
                 $existingUser = User::where('email', $data['email'])->first();
@@ -101,6 +101,11 @@ class UserService
                         'email' => ['Email đã được sử dụng']
                     ]);
                 }
+            }
+
+            if (isset($data['password']) && !empty($data['password'])) {
+                $user->password = $data['password']; // Sẽ được hash tự động bởi mutator
+                unset($data['password']); // Loại bỏ password khỏi mảng data để tránh ghi đè
             }
 
             $user->update($data);
@@ -126,7 +131,7 @@ class UserService
     {
         return DB::transaction(function () use ($id) {
             $user = $this->findUser($id);
-            
+
             // Prevent deleting the last admin
             if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
                 throw ValidationException::withMessages([
@@ -158,11 +163,13 @@ class UserService
     {
         return DB::transaction(function () use ($id) {
             $user = $this->findUser($id);
-            
+
             // Prevent deactivating the last admin
-            if ($user->role === 'admin' && 
-                $user->is_active && 
-                User::where('role', 'admin')->where('is_active', true)->count() <= 1) {
+            if (
+                $user->role === 'admin' &&
+                $user->is_active &&
+                User::where('role', 'admin')->where('is_active', true)->count() <= 1
+            ) {
                 throw ValidationException::withMessages([
                     'is_active' => ['Không thể vô hiệu hóa admin cuối cùng']
                 ]);
@@ -181,7 +188,3 @@ class UserService
         });
     }
 }
-
-
-
-

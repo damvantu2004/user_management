@@ -130,7 +130,9 @@ class UserController extends Controller
                 'name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|max:255',
                 'role' => 'sometimes|in:admin,user',
-                'is_active' => 'sometimes|boolean'
+                'is_active' => 'sometimes|boolean',
+                'password' => 'sometimes|string|min:8',
+
             ]);
 
             $user = $this->userService->updateUser($id, $validatedData);
