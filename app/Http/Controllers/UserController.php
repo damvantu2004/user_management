@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * @OA\Tag(name="Users", description="Operations about users")
@@ -40,7 +41,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $filters = $request->only(['role', 'is_active', 'search']);
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', 100);
         $users = $this->userService->getAllUsers($filters, $perPage);
         return $this->successResponse($users, 'Lấy danh sách người dùng thành công');
     }
@@ -134,7 +135,6 @@ class UserController extends Controller
 
             $user = $this->userService->updateUser($id, $validatedData);
             return $this->successResponse($user, 'Cập nhật thông tin người dùng thành công');
-
         } catch (ModelNotFoundException $e) {
             return $this->notFoundResponse('Không tìm thấy người dùng');
         } catch (ValidationException $e) {
@@ -168,11 +168,3 @@ class UserController extends Controller
         }
     }
 }
-
-
-
-
-
-
-
-

@@ -6,11 +6,12 @@ use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     protected $authService;
-    
+
     private const VALIDATION_RULES = [
         'register' => [
             'name' => 'required|string|max:255',
@@ -94,7 +95,7 @@ class AuthController extends Controller
     public function verifyEmail(Request $request)
     {
         $validator = Validator::make($request->all(), self::VALIDATION_RULES['verify_email']);
-
+        log::info($request->all());
         if ($validator->fails()) {
             return $this->validationErrorResponse($validator->errors());
         }
@@ -131,6 +132,7 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+
         try {
             $validator = Validator::make($request->all(), self::VALIDATION_RULES['login']);
 
@@ -144,7 +146,7 @@ class AuthController extends Controller
 
             $remember = $request->boolean('remember', false);
             $result = $this->authService->login($request->only(['email', 'password']), $remember);
-            
+
             return $this->successResponse([
                 'access_token' => $result['access_token'],
                 'token_type' => $result['token_type'],
@@ -221,9 +223,3 @@ class AuthController extends Controller
         return $this->successResponse($user, 'Thông tin người dùng hiện tại');
     }
 }
-
-
-
-
-
-
