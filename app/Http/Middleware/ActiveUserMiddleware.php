@@ -13,10 +13,10 @@ class ActiveUserMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $user = Auth::guard('api')->user();
-        if (!$user || !$user->is_active) {
+        $user = Auth::guard('api')->user(); // Lấy thông tin user đang đăng nhập
+        if (!$user || !$user->is_active) { // Nếu user không tồn tại hoặc không active
             return response()->json(['error' => 'Tài khoản của bạn đã bị khóa hoặc chưa active!'], 403);
         }
-        return $next($request);
+        return $next($request); // Cho phép truy cập
     }
 }

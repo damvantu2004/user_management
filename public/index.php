@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; 
 
-define('LARAVEL_START', microtime(true));
+define('LARAVEL_START', microtime(true));   // định nghĩa hằng số LARAVEL_START với thời gian hiện tại
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +16,7 @@ define('LARAVEL_START', microtime(true));
 |
 */
 
-if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) { // dùng  file maintenance.php để kiểm tra trạng thái bảo trì của ứng dụng
     require $maintenance;
 }
 
@@ -30,7 +30,7 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 | into the script here so we don't need to manually load our classes.
 |
 */
-
+// tải file autoload.php từ thư mục vendor. file này dùng để tải các thư viện và các lớp của ứng dụng
 require __DIR__.'/../vendor/autoload.php';
 
 /*
@@ -44,12 +44,15 @@ require __DIR__.'/../vendor/autoload.php';
 |
 */
 
-$app = require_once __DIR__.'/../bootstrap/app.php';
+$app = require_once __DIR__.'/../bootstrap/app.php'; // thực hiện các thiết lập ban đầu của ứng dụng từ file bootstrap/app.php
+// tạo kernel dùng để xử lý request HTTP
+$kernel = $app->make(Kernel::class); // lấy instance của HTTP Kernel từ container đăng ký trong file bootstrap/app.php
 
-$kernel = $app->make(Kernel::class);
+$response = $kernel->handle( // HTTP kernel xử lý request thông qua phương thức handle(), thực hiện các middleware và định tuyến request đến controller thích hợp
+    $request = Request::capture() // dùng để bắt request HTTP hiện tại, gán vào biến $request
 
-$response = $kernel->handle(
-    $request = Request::capture()
-)->send();
+)->send(); //   response được gửi trả về client
 
-$kernel->terminate($request, $response);
+$kernel->terminate($request, $response); // sau khi gửi response, kernel sẽ thực hiện các hành động cuối cùng là terminate() để  Chạy các phương thức terminate của middleware.
+//Dọn dẹp tài nguyên sau khi request hoàn tất.
+//Đảm bảo vòng đời request được kết thúc đúng cách.

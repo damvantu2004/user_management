@@ -46,7 +46,9 @@ Route::middleware(['auth:api', 'active'])->group(function () {
 | - active: Kiểm tra tài khoản đã được kích hoạt
 | - admin: Kiểm tra người dùng có quyền admin
 */
-Route::middleware(['auth:api', 'active', 'admin'])->group(function () {
+Route::middleware(['auth:api', 'active', 'admin'])->group(function () { // middleware để xác thực admin, các middleware sẽ được thực hiện theo thứ tự từ trái sang phải. nếu như vi phạm middleware nào thì sẽ dừng lại và trả về lỗi
+    //auth là tên middleware, api là tham số được truyền vào middleware, chỉ định guard cần sử dụng
+
     // Quản lý người dùng (chỉ admin mới có quyền)
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index']); // Lấy danh sách tất cả người dùng

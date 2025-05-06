@@ -35,15 +35,15 @@ return [
     |
     */
 
-    'guards' => [
+    'guards' => [ 
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
 
-        'api' => [
+        'api' => [ // 
             'driver' => 'jwt', // đổi từ 'token' hoặc 'sanctum' sang 'jwt'
-            'provider' => 'users',
+            'provider' => 'users', // sử dụng model User để xác thực
         ],
     ],
 

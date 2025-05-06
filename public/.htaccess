@@ -15,7 +15,9 @@
     RewriteRule ^ %1 [L,R=301]
 
     # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-d # dùng để kiểm tra xem file hiện tại có phải là thư mục không
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    RewriteRule ^ index.php [L] # nếu request không phải là file hoặc thư mục, thì sẽ chuyển hướng đến index.php
+
+
 </IfModule>
