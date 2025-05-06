@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -102,13 +103,13 @@ class AuthController extends Controller
     public function verifyEmail(Request $request)
     {
         $validator = Validator::make($request->all(), self::VALIDATION_RULES['verify_email']);
-        log::info($request->all());
+        Log::info($request->all());
         if ($validator->fails()) {
             return $this->validationErrorResponse($validator->errors());
         }
 
         $result = $this->authService->verifyEmail($request->all());
-        return $this->successResponse(null, $result['message']);
+        return view('auth.verification_success', ['message' => $result['message']]);
     }
 
     /**
@@ -251,3 +252,6 @@ class AuthController extends Controller
         return $json['success'] ?? false;
     }
 }
+
+
+

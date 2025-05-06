@@ -103,6 +103,19 @@ class UserService
                 }
             }
 
+            // Prevent deactivating the last admin
+            if (
+                isset($data['is_active']) && 
+                $data['is_active'] === false && 
+                $user->role === 'admin' && 
+                $user->is_active && 
+                User::where('role', 'admin')->where('is_active', true)->count() <= 1
+            ) {
+                throw ValidationException::withMessages([
+                    'is_active' => ['Không thể vô hiệu hóa admin cuối cùng']
+                ]);
+            }
+
             if (isset($data['password']) && !empty($data['password'])) {
                 $user->password = $data['password']; // Sẽ được hash tự động bởi mutator
                 unset($data['password']); // Loại bỏ password khỏi mảng data để tránh ghi đè
@@ -188,3 +201,5 @@ class UserService
         });
     }
 }
+
+
