@@ -88,7 +88,7 @@ class UserService
      * @return User
      * @throws ValidationException
      */
-    public function updateUser(int $id, array $data): User
+    public function     updateUser(int $id, array $data): User
     {
         return DB::transaction(function () use ($id, $data) {
             $user = $this->findUser($id);
@@ -105,10 +105,10 @@ class UserService
 
             // Prevent deactivating the last admin
             if (
-                isset($data['is_active']) && 
-                $data['is_active'] === false && 
-                $user->role === 'admin' && 
-                $user->is_active && 
+                isset($data['is_active']) &&
+                $data['is_active'] === false &&
+                $user->role === 'admin' &&
+                $user->is_active &&
                 User::where('role', 'admin')->where('is_active', true)->count() <= 1
             ) {
                 throw ValidationException::withMessages([
@@ -201,5 +201,3 @@ class UserService
         });
     }
 }
-
-
