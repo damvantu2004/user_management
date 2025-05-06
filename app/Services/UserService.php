@@ -88,7 +88,7 @@ class UserService
      * @return User
      * @throws ValidationException
      */
-    public function     updateUser(int $id, array $data): User
+    public function updateUser(int $id, array $data): User
     {
         return DB::transaction(function () use ($id, $data) {
             $user = $this->findUser($id);
@@ -103,10 +103,9 @@ class UserService
                 }
             }
 
-            // Prevent deactivating the last admin
+            // nếu tài khoản admin mà đang hoạt động thì không cho phép sửa trạng thái
             if (
-                isset($data['is_active']) &&
-                $data['is_active'] === false &&
+                ($data['is_active'] === false || $data['role'] === 'user') &&
                 $user->role === 'admin' &&
                 $user->is_active &&
                 User::where('role', 'admin')->where('is_active', true)->count() <= 1
@@ -116,6 +115,7 @@ class UserService
                 ]);
             }
 
+            // nếu không gửi mật khẩu từ form thì không cập nhật mật khẩu
             if (isset($data['password']) && !empty($data['password'])) {
                 $user->password = $data['password']; // Sẽ được hash tự động bởi mutator
                 unset($data['password']); // Loại bỏ password khỏi mảng data để tránh ghi đè
