@@ -145,7 +145,7 @@ class AuthController extends Controller
 
             if ($validator->fails()) {
                 return $this->errorResponse(
-                    'Dữ liệu không hợp lệ',
+                    'Thông tin không hợp lệ',
                     422,
                     $validator->errors()
                 );

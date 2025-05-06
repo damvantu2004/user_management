@@ -134,7 +134,7 @@ class UserController extends Controller
                 'password' => 'sometimes|string|min:8',
 
             ]);
-
+            $this->userService->toggleUserStatus($id);
             $user = $this->userService->updateUser($id, $validatedData);
             return $this->successResponse($user, 'Cập nhật thông tin người dùng thành công');
         } catch (ModelNotFoundException $e) {
@@ -143,6 +143,8 @@ class UserController extends Controller
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             return $this->serverErrorResponse('Có lỗi xảy ra khi cập nhật người dùng');
+        } catch (ValidationException $e) {
+            return $this->validationErrorResponse($e->errors());
         }
     }
 
