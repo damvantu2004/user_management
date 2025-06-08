@@ -1,0 +1,18 @@
+<div class="forbidden-container">
+    <div class="forbidden-content text-center">
+        <div class="error-code">403</div>
+        <h1 class="error-title">Truy cập bị từ chối</h1>
+        <p class="error-message">
+            Bạn không có quyền truy cập vào trang này.
+            Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là một sự nhầm lẫn.
+        </p>
+        <div class="action-buttons">
+            <button class="btn btn-primary me-2" (click)="goBack()">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại
+            </button>
+            <button class="btn btn-outline-primary" (click)="goHome()">
+                <i class="bi bi-house-door me-2"></i>Trang chủ
+            </button>
+        </div>
+    </div>
+</div>

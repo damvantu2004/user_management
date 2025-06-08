@@ -1,0 +1,17 @@
+<!-- Header -->
+<nav class="navbar navbar-expand bg-white  px-4 py-2 d-lg-flex justify-content-between  w-100">
+    <button class="btn btn-outline-primary d-lg-none" id="menuToggle" (click)="onToggleClick()">
+        <i class="bi bi-list"></i>
+    </button>
+    <div class="d-flex align-items-center gap-3 w-100 flex-row-reverse">
+
+        <img src="https://i.pravatar.cc/40?img=12" alt="avatar" class="rounded-circle" width="40" height="40"
+            data-bs-toggle="dropdown">
+
+        <span class="text-dark">Xin chào, <strong>{{user.name}}</strong></span>
+        <ul class="dropdown-menu dropdown-account">
+            <li><a class="dropdown-item">Thông tin tài khoản</a></li>
+            <li><a class="dropdown-item" (click)="logout()" style="cursor: pointer;">Đăng xuất</a></li>
+        </ul>
+    </div>
+</nav>

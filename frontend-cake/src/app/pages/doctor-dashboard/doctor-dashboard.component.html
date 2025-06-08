@@ -1,0 +1,292 @@
+<div class="d-flex">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1">
+    <div class="container-fluid py-4">
+      <!-- Header Welcome -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-0 bg-gradient-primary text-white">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h3 class="mb-1">Chào bác sĩ {{ currentUser?.name }}! 👨‍⚕️</h3>
+                  <p class="mb-0 opacity-75">Chào mừng bạn đến với hệ thống quản lý bệnh nhân</p>
+                  <small class="opacity-50">Hôm nay: {{ formatDate(today) }}</small>
+                </div>
+                <div class="col-md-4 text-end">
+                  <i class="fas fa-stethoscope fa-3x opacity-50"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stats-card">
+            <div class="card-body text-center">
+              <div class="text-primary mb-2">
+                <i class="fas fa-users fa-2x"></i>
+              </div>
+              <h4 class="fw-bold text-primary">{{ stats.totalPatients }}</h4>
+              <p class="text-muted mb-0">Tổng bệnh nhân</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stats-card">
+            <div class="card-body text-center">
+              <div class="text-info mb-2">
+                <i class="fas fa-calendar-day fa-2x"></i>
+              </div>
+              <h4 class="fw-bold text-info">{{ stats.todayAppointments }}</h4>
+              <p class="text-muted mb-0">Lịch hôm nay</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stats-card">
+            <div class="card-body text-center">
+              <div class="text-warning mb-2">
+                <i class="fas fa-clock fa-2x"></i>
+              </div>
+              <h4 class="fw-bold text-warning">{{ stats.pendingAppointments }}</h4>
+              <p class="text-muted mb-0">Chờ xác nhận</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm stats-card">
+            <div class="card-body text-center">
+              <div class="text-success mb-2">
+                <i class="fas fa-check-circle fa-2x"></i>
+              </div>
+              <h4 class="fw-bold text-success">{{ stats.completedAppointments }}</h4>
+              <p class="text-muted mb-0">Đã hoàn thành</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+          <!-- Today's Appointments -->
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <i class="fas fa-calendar-day text-info me-2"></i>
+                  Lịch hẹn hôm nay
+                </h5>
+                <a routerLink="/doctor-appointments" class="btn btn-sm btn-outline-info">
+                  Xem tất cả
+                </a>
+              </div>
+            </div>
+            <div class="card-body">
+              <div *ngIf="loading" class="text-center py-3">
+                <app-loading></app-loading>
+              </div>
+              
+              <div *ngIf="!loading && todayAppointments.length === 0" class="text-center py-4 text-muted">
+                <i class="fas fa-calendar-times fa-3x mb-3 opacity-50"></i>
+                <p>Không có lịch hẹn nào hôm nay</p>
+              </div>
+
+              <div *ngIf="!loading && todayAppointments.length > 0">
+                <div *ngFor="let appointment of todayAppointments" 
+                     [class]="'appointment-card mb-3 border-start border-3 ' + getTimeStatusClass(getTimeStatus(appointment.appointment_time))">
+                  <div class="row align-items-center">
+                    <div class="col-md-2">
+                      <div class="time-display text-center">
+                        <div class="appointment-time fw-bold text-primary">{{ formatTime(appointment.appointment_time) }}</div>
+                        <small class="text-muted">{{ getTimeStatus(appointment.appointment_time) === 'current' ? 'Hiện tại' : '' }}</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <h6 class="mb-1">{{ appointment.patient?.user?.name }}</h6>
+                      <p class="text-muted mb-1 small">{{ appointment.reason }}</p>
+                      <small class="text-muted">
+                        <i class="fas fa-phone me-1"></i>{{ appointment.patient?.user?.phone }}
+                      </small>
+                    </div>
+                    <div class="col-md-2">
+                      <span [class]="getStatusBadgeClass(appointment.status)">
+                        {{ getStatusText(appointment.status) }}
+                      </span>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="btn-group-vertical btn-group-sm">
+                        <button *ngIf="appointment.status === 'pending'" 
+                                class="btn btn-outline-success btn-sm"
+                                (click)="confirmAppointment(appointment.id)">
+                          <i class="fas fa-check me-1"></i>Xác nhận
+                        </button>
+                        <button *ngIf="appointment.status === 'confirmed'" 
+                                class="btn btn-outline-primary btn-sm"
+                                (click)="completeAppointment(appointment.id)">
+                          <i class="fas fa-user-check me-1"></i>Hoàn thành
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Appointments -->
+          <div class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="fas fa-hourglass-half text-warning me-2"></i>
+                Lịch hẹn chờ xác nhận
+              </h5>
+            </div>
+            <div class="card-body">
+              <div *ngIf="pendingAppointments.length === 0" class="text-center py-3 text-muted">
+                <i class="fas fa-check-double fa-2x mb-2 opacity-50"></i>
+                <p>Không có lịch hẹn nào chờ xác nhận</p>
+              </div>
+
+              <div *ngIf="pendingAppointments.length > 0">
+                <div *ngFor="let appointment of pendingAppointments" class="pending-appointment-card mb-3">
+                  <div class="row align-items-center">
+                    <div class="col-md-3">
+                      <div class="date-time-display">
+                        <div class="fw-bold">{{ formatDate(appointment.appointment_date) }}</div>
+                        <div class="text-primary">{{ formatTime(appointment.appointment_time) }}</div>
+                      </div>
+                    </div>
+                    <div class="col-md-5">
+                      <h6 class="mb-1">{{ appointment.patient?.user?.name }}</h6>
+                      <p class="text-muted mb-0 small">{{ appointment.reason }}</p>
+                    </div>
+                    <div class="col-md-2">
+                      <span class="badge bg-warning">Chờ xác nhận</span>
+                    </div>
+                    <div class="col-md-2">
+                      <button class="btn btn-success btn-sm"
+                              (click)="confirmAppointment(appointment.id)">
+                        <i class="fas fa-check me-1"></i>Xác nhận
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+          <!-- Doctor Profile -->
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="fas fa-user-md text-primary me-2"></i>
+                Thông tin bác sĩ
+              </h5>
+            </div>
+            <div class="card-body">
+              <div *ngIf="doctorProfile" class="text-center">
+                <div class="doctor-avatar mx-auto mb-3">
+                  <i class="fas fa-user-md fa-4x text-primary"></i>
+                </div>
+                <h6 class="fw-bold">{{ currentUser?.name }}</h6>
+                <p class="text-muted mb-2">{{ doctorProfile.specialty }}</p>
+                <div class="mb-2">
+                  <small class="text-muted">
+                    <i class="fas fa-envelope me-1"></i>
+                    {{ currentUser?.email }}
+                  </small>
+                </div>
+                <div *ngIf="currentUser?.phone" class="mb-3">
+                  <small class="text-muted">
+                    <i class="fas fa-phone me-1"></i>
+                    {{ currentUser?.phone }}
+                  </small>
+                </div>
+                <a routerLink="/doctor-profile" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-edit me-1"></i>Cập nhật thông tin
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="fas fa-bolt text-warning me-2"></i>
+                Thao tác nhanh
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <a routerLink="/doctor-appointments" class="btn btn-primary">
+                  <i class="fas fa-calendar-alt me-2"></i>
+                  Quản lý lịch hẹn
+                </a>
+                <a routerLink="/my-patients" class="btn btn-outline-success">
+                  <i class="fas fa-users me-2"></i>
+                  Danh sách bệnh nhân
+                </a>
+                <a routerLink="/doctor-schedule" class="btn btn-outline-info">
+                  <i class="fas fa-clock me-2"></i>
+                  Lịch làm việc
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Patients -->
+          <div class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="fas fa-user-friends text-success me-2"></i>
+                Bệnh nhân gần đây
+              </h5>
+            </div>
+            <div class="card-body">
+              <div *ngIf="recentPatients.length === 0" class="text-center py-3 text-muted">
+                <p>Chưa có bệnh nhân nào</p>
+              </div>
+              
+              <div *ngIf="recentPatients.length > 0">
+                <div *ngFor="let patient of recentPatients" class="patient-item mb-3 p-2 border rounded">
+                  <div class="row align-items-center">
+                    <div class="col-3">
+                      <div class="patient-avatar text-center">
+                        <i class="fas fa-user-circle fa-2x text-muted"></i>
+                      </div>
+                    </div>
+                    <div class="col-9">
+                      <h6 class="mb-1 small">{{ patient.user?.name }}</h6>
+                      <p class="mb-1 small text-muted">{{ patient.user?.email }}</p>
+                      <small class="text-success">
+                        <i class="fas fa-check-circle me-1"></i>Đã khám
+                      </small>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <a routerLink="/my-patients" class="btn btn-sm btn-outline-success">
+                    Xem tất cả bệnh nhân
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

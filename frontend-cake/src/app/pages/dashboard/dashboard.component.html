@@ -1,0 +1,33 @@
+<div class="d-flex">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1">
+    <div class="container-fluid py-4">
+      <!-- Admin Header -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-0 bg-danger text-white">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h3 class="mb-1">Admin Dashboard 🛡️</h3>
+                  <p class="mb-0 opacity-75">Quản lý hệ thống và người dùng</p>
+                </div>
+                <div class="col-md-4 text-end">
+                  <i class="fas fa-user-shield fa-3x opacity-50"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Content -->
+      <div class="admin-content">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+</div>

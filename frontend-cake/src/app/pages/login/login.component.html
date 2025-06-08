@@ -1,0 +1,158 @@
+<div style="background: #f0f5f9;min-height: 100vh;">
+    <div class="container">
+        <div class="auth-card p-4">
+            <ul class="nav nav-tabs mb-3" id="authTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="login-tab" type="button" role="tab" (click)="switchTab('login')"
+                        [ngClass]="{'active': activeTab === 'login'}">
+                        Đăng nhập
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="register-tab" type="button" role="tab" (click)="switchTab('register')"
+                        [ngClass]="{'active': activeTab === 'register'}">
+                        Đăng ký
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="authTabContent">
+                <div *ngIf="message.status" class="alert alert-danger">
+                    {{message.message}}
+                </div>
+                <div *ngIf="!message.status && message.clicked" class="alert alert-success">
+                    {{message.message}}
+                </div>
+                <!-- Đăng nhập -->
+                <div class="tab-pane fade" id="login" role="tabpanel"
+                    [ngClass]="{'show active': activeTab === 'login'}">
+                    <form #login="ngForm" (ngSubmit)="onLogin(login)">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" placeholder="nhap@email.com"
+                                autocomplete [(ngModel)]="model.email" name="email" #name="ngModel" required email>
+                            <div *ngIf="name.touched">
+                                <p *ngIf="name.errors?.['required']" class="text-danger">Yêu cầu nhập email</p>
+                                <p *ngIf="name.errors?.['email']" class="text-danger">Email không hợp lệ</p>
+                            </div>
+
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="••••••"
+                                autocomplete="current-password" [(ngModel)]="model.password" name="password"
+                                #password="ngModel" minlength=6 required>
+                            <div *ngIf="password.touched">
+                                <p *ngIf="password.errors?.['required']" class="text-danger">Yêu cầu nhập mật khẩu</p>
+                                <p *ngIf="password.errors?.['minlength']" class="text-danger">Mật khẩu lớn hơn 6 kí tự
+                                </p>
+                            </div>
+
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <input type="checkbox" [(ngModel)]="model.remember" name="remember"> remember
+                                me
+                            </div>
+                            <a routerLink="/send-email">Quên mật khẩu?</a>
+                        </div>
+                        
+                        <!-- Widget reCAPTCHA v2 cho đăng nhập -->
+                        <div class="mb-3">
+                            <div id="login-captcha" class="g-recaptcha" 
+                                data-sitekey="6LfweSkrAAAAAIY0vALyQjfGCMHAsHLyKE27oEXz">
+                            </div>
+                            <div *ngIf="captchaError" class="text-danger mt-2">
+                                Vui lòng xác nhận bạn không phải robot
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-custom w-100" type="submit" [disabled]="login.invalid">Đăng nhập</button>
+                    </form>
+                </div>
+
+                <!-- Đăng ký -->
+                <div class="tab-pane fade" [ngClass]="{'show active': activeTab === 'register'}" id="register"
+                    role="tabpanel">
+                    <form #register="ngForm" (ngSubmit)="onRegister(register)">
+                        <div class="mb-3">
+                            <label for="regName" class="form-label">Họ tên</label>
+                            <input type="text" class="form-control" id="regName" placeholder="Nguyễn Văn A"
+                                #name1="ngModel" [(ngModel)]="modelRegister.name" name="name" required>
+                            <div *ngIf="name1.touched">
+                                <p *ngIf="name1.errors?.['required']" class="text-danger">Yêu cầu nhập họ tên</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="regEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="regEmail" placeholder="nhap@email.com"
+                                #email1="ngModel" [(ngModel)]="modelRegister.email" name="email" autocomplete required
+                                email>
+
+                            <div *ngIf="email1.touched">
+                                <p *ngIf="email1.errors?.['required']" class="text-danger">Yêu cầu nhập email</p>
+                                <p *ngIf="email1.errors?.['email']" class="text-danger">Email không hợp lệ</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="regPhone" class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" id="regPhone" placeholder="0901234567"
+                                #phone="ngModel" [(ngModel)]="modelRegister.phone" name="phone" required 
+                                pattern="^[0-9]{10,11}$">
+                            <div *ngIf="phone.touched">
+                                <p *ngIf="phone.errors?.['required']" class="text-danger">Yêu cầu nhập số điện thoại</p>
+                                <p *ngIf="phone.errors?.['pattern']" class="text-danger">Số điện thoại phải có 10-11 chữ số</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="regPassword" class="form-label">Mật khẩu</label>
+                            <input type="password" class="form-control" id="regPassword" placeholder="••••••"
+                                #password1="ngModel" [(ngModel)]="modelRegister.password" autocomplete="new-password"
+                                name="password" required minlength=6>
+                            <div *ngIf="password1.touched">
+                                <p *ngIf="password1.errors?.['required']" class="text-danger">Yêu cầu nhập mật khẩu</p>
+                                <p *ngIf="password1.errors?.['minlength']" class="text-danger">Mật khẩu lớn hơn 6 kí tự
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="retypePassword" class="form-label">Nhập lại mật khẩu</label>
+                            <input type="password" class="form-control" id="retypePassword" placeholder="••••••"
+                                #password_confirmation="ngModel" [(ngModel)]="modelRegister.password_confirmation"
+                                name="password_confirmation" autocomplete="new-password">
+                            <p *ngIf="password_confirmation.touched && !passwordMatching()" class="text-danger">Mật khẩu
+                                không
+                                khớp</p>
+                        </div>
+                        
+                        <!-- Widget reCAPTCHA v2 cho đăng ký -->
+                        <div class="mb-3">
+                            <div id="register-captcha" class="g-recaptcha" 
+                                data-sitekey="6LfweSkrAAAAAIY0vALyQjfGCMHAsHLyKE27oEXz">
+                            </div>
+                            <div *ngIf="captchaError" class="text-danger mt-2">
+                                Vui lòng xác nhận bạn không phải robot
+                            </div>
+                        </div>
+                        
+                        <!-- Role Selection -->
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Đăng ký với vai trò</label>
+                            <select class="form-control" id="role" [(ngModel)]="modelRegister.role" name="role" required>
+                                <option value="patient">🏥 Bệnh nhân</option>
+                                <option value="doctor">👨‍⚕️ Bác sĩ</option>
+                            </select>
+                            <small class="text-muted">Chọn vai trò phù hợp với bạn</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-custom w-100"
+                            [disabled]="register.invalid || !passwordMatching()">Đăng ký</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@if (loading) {
+<app-loading></app-loading>
+}

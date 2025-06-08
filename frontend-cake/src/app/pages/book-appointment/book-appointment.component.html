@@ -1,0 +1,240 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">Đặt lịch khám bệnh</h2>
+          <p class="text-muted mb-0">Chọn bác sĩ và thời gian phù hợp với bạn</p>
+        </div>
+        <button type="button" class="btn btn-outline-secondary" routerLink="/patient-dashboard">
+          <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Message -->
+  <div *ngIf="message" class="row mb-4">
+    <div class="col-12">
+      <div [class]="'alert alert-' + (messageType === 'success' ? 'success' : 'danger') + ' alert-dismissible fade show'">
+        <i [class]="'fas ' + (messageType === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle') + ' me-2'"></i>
+        {{ message }}
+        <button type="button" class="btn-close" (click)="message = ''"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Form Section -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-plus me-2"></i>
+            Thông tin đặt lịch
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()">
+            <!-- Doctor Selection -->
+            <div class="mb-4">
+              <label for="doctor_id" class="form-label fw-bold">
+                <i class="fas fa-user-md text-primary me-2"></i>
+                Chọn bác sĩ <span class="text-danger">*</span>
+              </label>
+              <select 
+                class="form-select" 
+                id="doctor_id" 
+                formControlName="doctor_id"
+                [class.is-invalid]="isFieldInvalid('doctor_id')">
+                <option value="">-- Chọn bác sĩ --</option>
+                <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                  {{ doctor.user?.name }} - {{ doctor.specialty }}
+                </option>
+              </select>
+              <div class="invalid-feedback">{{ getFieldError('doctor_id') }}</div>
+              
+              <!-- Selected Doctor Info -->
+              <div *ngIf="selectedDoctor" class="doctor-info mt-3 p-3 bg-light rounded">
+                <div class="row align-items-center">
+                  <div class="col-auto">
+                    <i class="fas fa-user-md fa-2x text-primary"></i>
+                  </div>
+                  <div class="col">
+                    <h6 class="mb-1">{{ selectedDoctor.user?.name }}</h6>
+                    <p class="mb-1 text-muted">{{ selectedDoctor.specialty }}</p>
+                    <small class="text-muted">{{ selectedDoctor.bio || 'Bác sĩ chuyên khoa' }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Date Selection -->
+            <div class="mb-4">
+              <label for="appointment_date" class="form-label fw-bold">
+                <i class="fas fa-calendar text-success me-2"></i>
+                Ngày khám <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="appointment_date"
+                formControlName="appointment_date"
+                [min]="minDate"
+                [max]="maxDate"
+                [class.is-invalid]="isFieldInvalid('appointment_date')">
+              <div class="invalid-feedback">{{ getFieldError('appointment_date') }}</div>
+              <small class="form-text text-muted">
+                Có thể đặt lịch từ hôm nay đến 3 tháng tới
+              </small>
+            </div>
+
+            <!-- Time Selection -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">
+                <i class="fas fa-clock text-warning me-2"></i>
+                Giờ khám <span class="text-danger">*</span>
+              </label>
+              <div class="time-slots">
+                <div class="row g-2">
+                  <div class="col-6 col-md-3" *ngFor="let time of timeSlots">
+                    <input 
+                      type="radio" 
+                      class="btn-check" 
+                      [id]="'time-' + time"
+                      formControlName="appointment_time"
+                      [value]="time"
+                      [disabled]="!isTimeSlotAvailable(time)">
+                    <label 
+                      class="btn btn-outline-primary w-100" 
+                      [for]="'time-' + time"
+                      [class.disabled]="!isTimeSlotAvailable(time)">
+                      {{ time }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="isFieldInvalid('appointment_time')" class="text-danger small mt-2">
+                {{ getFieldError('appointment_time') }}
+              </div>
+              <small class="form-text text-muted mt-2">
+                Chọn khung giờ khám phù hợp
+              </small>
+            </div>
+
+            <!-- Reason -->
+            <div class="mb-4">
+              <label for="reason" class="form-label fw-bold">
+                <i class="fas fa-edit text-info me-2"></i>
+                Lý do khám <span class="text-danger">*</span>
+              </label>
+              <textarea 
+                class="form-control" 
+                id="reason"
+                formControlName="reason"
+                rows="4"
+                placeholder="Mô tả triệu chứng hoặc lý do cần khám..."
+                [class.is-invalid]="isFieldInvalid('reason')"></textarea>
+              <div class="invalid-feedback">{{ getFieldError('reason') }}</div>
+              <small class="form-text text-muted">
+                Tối thiểu 10 ký tự. Thông tin này giúp bác sĩ chuẩn bị tốt hơn.
+              </small>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary me-md-2"
+                routerLink="/patient-dashboard">
+                <i class="fas fa-times me-2"></i>Hủy
+              </button>
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="appointmentForm.invalid || submitting">
+                <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!submitting" class="fas fa-check me-2"></i>
+                {{ submitting ? 'Đang xử lý...' : 'Đặt lịch khám' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="col-lg-4">
+      <!-- Instructions -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Hướng dẫn đặt lịch
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="step-item mb-3">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <strong>Chọn bác sĩ</strong>
+              <p class="mb-0 small text-muted">Chọn bác sĩ phù hợp với chuyên khoa cần khám</p>
+            </div>
+          </div>
+          <div class="step-item mb-3">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <strong>Chọn ngày</strong>
+              <p class="mb-0 small text-muted">Chọn ngày trong vòng 3 tháng tới</p>
+            </div>
+          </div>
+          <div class="step-item mb-3">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <strong>Chọn giờ</strong>
+              <p class="mb-0 small text-muted">Chọn khung giờ còn trống</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <strong>Mô tả triệu chứng</strong>
+              <p class="mb-0 small text-muted">Cung cấp thông tin chi tiết</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-headset me-2"></i>
+            Cần hỗ trợ?
+          </h6>
+        </div>
+        <div class="card-body">
+          <p class="mb-3">Liên hệ với chúng tôi nếu cần hỗ trợ:</p>
+          <div class="contact-item mb-2">
+            <i class="fas fa-phone text-success me-2"></i>
+            <strong>Hotline:</strong> 1900-xxx-xxx
+          </div>
+          <div class="contact-item mb-2">
+            <i class="fas fa-envelope text-primary me-2"></i>
+            <strong>Email:</strong> support&#64;hospital.com
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-clock text-warning me-2"></i>
+            <strong>Giờ làm việc:</strong> 24/7
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div *ngIf="loading" class="loading-overlay">
+  <app-loading></app-loading>
+</div>

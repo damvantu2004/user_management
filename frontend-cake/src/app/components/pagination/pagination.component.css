@@ -1,0 +1,30 @@
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    cursor: pointer;
+    color: #6C7EE1;
+    transition: none;
+}
+
+.page-item.active .page-link {
+    background-color: #6C7EE1;
+    border-color: #6C7EE1;
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.page-link:focus {
+    box-shadow: none;
+    z-index: 0;
+}
+
+.disabled-pagination {
+    pointer-events: none;
+    opacity: 0.7;
+}

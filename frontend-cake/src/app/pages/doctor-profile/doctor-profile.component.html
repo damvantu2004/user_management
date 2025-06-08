@@ -1,0 +1,443 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">Hồ sơ bác sĩ</h2>
+          <p class="text-muted mb-0">Quản lý thông tin chuyên môn và cài đặt tài khoản</p>
+        </div>
+        <button type="button" class="btn btn-outline-secondary" routerLink="/doctor-dashboard">
+          <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Message -->
+  <div *ngIf="message" class="row mb-4">
+    <div class="col-12">
+      <div [class]="'alert alert-' + (messageType === 'success' ? 'success' : 'danger') + ' alert-dismissible fade show'">
+        <i [class]="'fas ' + (messageType === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle') + ' me-2'"></i>
+        {{ message }}
+        <button type="button" class="btn-close" (click)="message = ''"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Doctor Summary Card -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-user-md me-2"></i>
+            Thông tin bác sĩ
+          </h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="doctor-avatar mx-auto mb-3">
+            <i class="fas fa-user-md fa-4x text-success"></i>
+          </div>
+          <h5 class="fw-bold">{{ currentUser?.name }}</h5>
+          <p class="text-muted mb-2">{{ currentUser?.email }}</p>
+          <div *ngIf="profileForm.get('specialty')?.value" class="mb-2">
+            <span class="badge bg-success">
+              {{ profileForm.get('specialty')?.value }}
+            </span>
+          </div>
+          <div *ngIf="profileForm.get('degree')?.value" class="mb-2">
+            <span class="badge bg-primary">
+              {{ profileForm.get('degree')?.value }}
+            </span>
+          </div>
+          <div *ngIf="profileForm.get('experience_years')?.value" class="mb-3">
+            <span class="badge bg-info">
+              {{ profileForm.get('experience_years')?.value }} năm kinh nghiệm
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Professional Stats -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-chart-line me-2"></i>
+            Thống kê chuyên môn
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="stat-item mb-2">
+            <i class="fas fa-users text-primary me-2"></i>
+            <strong>Tổng bệnh nhân:</strong> <span class="text-primary">285</span>
+          </div>
+          <div class="stat-item mb-2">
+            <i class="fas fa-calendar-check text-success me-2"></i>
+            <strong>Lịch hẹn hoàn thành:</strong> <span class="text-success">423</span>
+          </div>
+          <div class="stat-item mb-2">
+            <i class="fas fa-star text-warning me-2"></i>
+            <strong>Đánh giá:</strong> <span class="text-warning">4.8/5</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-clock text-info me-2"></i>
+            <strong>Tỷ lệ đúng giờ:</strong> <span class="text-info">95%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Info -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-warning text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Thông tin nhanh
+          </h6>
+        </div>
+        <div class="card-body">
+          <div *ngIf="profileForm.get('consultation_fee')?.value" class="mb-2">
+            <strong>Phí khám:</strong> 
+            <span class="text-success">{{ formatCurrency(profileForm.get('consultation_fee')?.value) }}</span>
+          </div>
+          <div *ngIf="scheduleForm.get('max_patients_per_day')?.value" class="mb-2">
+            <strong>Tối đa/ngày:</strong> 
+            <span class="text-info">{{ scheduleForm.get('max_patients_per_day')?.value }} bệnh nhân</span>
+          </div>
+          <div *ngIf="profileForm.get('languages')?.value">
+            <strong>Ngôn ngữ:</strong> 
+            <span class="text-muted">{{ profileForm.get('languages')?.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <!-- Tab Navigation -->
+      <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+          <a class="nav-link" 
+             [class.active]="activeTab === 'profile'"
+             (click)="setActiveTab('profile')"
+             style="cursor: pointer;">
+            <i class="fas fa-user-md me-2"></i>Thông tin chuyên môn
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="activeTab === 'schedule'"
+             (click)="setActiveTab('schedule')"
+             style="cursor: pointer;">
+            <i class="fas fa-calendar-alt me-2"></i>Lịch làm việc
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="activeTab === 'password'"
+             (click)="setActiveTab('password')"
+             style="cursor: pointer;">
+            <i class="fas fa-lock me-2"></i>Đổi mật khẩu
+          </a>
+        </li>
+      </ul>
+
+      <!-- Profile Tab -->
+      <div *ngIf="activeTab === 'profile'" class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="mb-0">
+            <i class="fas fa-edit text-success me-2"></i>
+            Chỉnh sửa thông tin chuyên môn
+          </h5>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center py-4">
+            <app-loading></app-loading>
+          </div>
+
+          <form *ngIf="!loading" [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+            <!-- Basic Information -->
+            <h6 class="text-success mb-3">
+              <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+            </h6>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="name" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" formControlName="name"
+                       [class.is-invalid]="isFieldInvalid('name')">
+                <div class="invalid-feedback">{{ getFieldError('name') }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="email" formControlName="email"
+                       [class.is-invalid]="isFieldInvalid('email')">
+                <div class="invalid-feedback">{{ getFieldError('email') }}</div>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="phone" formControlName="phone"
+                       [class.is-invalid]="isFieldInvalid('phone')">
+                <div class="invalid-feedback">{{ getFieldError('phone') }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="license_number" class="form-label">Số giấy phép hành nghề</label>
+                <input type="text" class="form-control" id="license_number" formControlName="license_number"
+                       placeholder="VD: BYT-GP-12345">
+              </div>
+            </div>
+
+            <!-- Professional Information -->
+            <h6 class="text-success mb-3">
+              <i class="fas fa-graduation-cap me-2"></i>Thông tin chuyên môn
+            </h6>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="specialty" class="form-label">Chuyên khoa <span class="text-danger">*</span></label>
+                <select class="form-select" id="specialty" formControlName="specialty"
+                        [class.is-invalid]="isFieldInvalid('specialty')">
+                  <option value="">-- Chọn chuyên khoa --</option>
+                  <option *ngFor="let specialty of specialties" [value]="specialty">{{ specialty }}</option>
+                </select>
+                <div class="invalid-feedback">{{ getFieldError('specialty') }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="degree" class="form-label">Học vị</label>
+                <select class="form-select" id="degree" formControlName="degree">
+                  <option value="">-- Chọn học vị --</option>
+                  <option *ngFor="let degree of degrees" [value]="degree">{{ degree }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="experience_years" class="form-label">Số năm kinh nghiệm</label>
+                <input type="number" class="form-control" id="experience_years" formControlName="experience_years"
+                       min="0" max="50" placeholder="0"
+                       [class.is-invalid]="isFieldInvalid('experience_years')">
+                <div class="invalid-feedback">{{ getFieldError('experience_years') }}</div>
+              </div>
+              <div class="col-md-6">
+                <label for="consultation_fee" class="form-label">Phí khám (VNĐ)</label>
+                <input type="number" class="form-control" id="consultation_fee" formControlName="consultation_fee"
+                       min="0" placeholder="300000"
+                       [class.is-invalid]="isFieldInvalid('consultation_fee')">
+                <div class="invalid-feedback">{{ getFieldError('consultation_fee') }}</div>
+              </div>
+            </div>
+
+            <!-- Additional Information -->
+            <h6 class="text-success mb-3">
+              <i class="fas fa-user-circle me-2"></i>Thông tin bổ sung
+            </h6>
+            <div class="mb-4">
+              <label for="bio" class="form-label">Giới thiệu bản thân</label>
+              <textarea class="form-control" id="bio" formControlName="bio" rows="4"
+                        placeholder="Mô tả về kinh nghiệm, chuyên môn và phương pháp điều trị..."
+                        [class.is-invalid]="isFieldInvalid('bio')"></textarea>
+              <div class="invalid-feedback">{{ getFieldError('bio') }}</div>
+              <small class="form-text text-muted">Tối đa 1000 ký tự</small>
+            </div>
+
+            <div class="mb-4">
+              <label for="education" class="form-label">Học vấn & Đào tạo</label>
+              <textarea class="form-control" id="education" formControlName="education" rows="3"
+                        placeholder="Trường đại học, chứng chỉ chuyên môn, khóa đào tạo..."></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label for="achievements" class="form-label">Thành tích & Giải thưởng</label>
+              <textarea class="form-control" id="achievements" formControlName="achievements" rows="3"
+                        placeholder="Các giải thưởng, nghiên cứu, bài báo khoa học..."></textarea>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="languages" class="form-label">Ngôn ngữ</label>
+                <input type="text" class="form-control" id="languages" formControlName="languages"
+                       placeholder="VD: Tiếng Việt, English, 中文">
+              </div>
+              <div class="col-md-6">
+                <label for="address" class="form-label">Địa chỉ phòng khám</label>
+                <input type="text" class="form-control" id="address" formControlName="address"
+                       placeholder="Địa chỉ phòng khám riêng (nếu có)">
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="button" class="btn btn-outline-secondary me-md-2" routerLink="/doctor-dashboard">
+                <i class="fas fa-times me-2"></i>Hủy
+              </button>
+              <button type="submit" class="btn btn-success" [disabled]="profileForm.invalid || saving">
+                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!saving" class="fas fa-save me-2"></i>
+                {{ saving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Schedule Tab -->
+      <div *ngIf="activeTab === 'schedule'" class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-alt text-info me-2"></i>
+            Cài đặt lịch làm việc
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="scheduleForm" (ngSubmit)="onSubmitSchedule()">
+            <!-- Working Days -->
+            <h6 class="text-info mb-3">
+              <i class="fas fa-calendar-week me-2"></i>Ngày làm việc
+            </h6>
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="working-days">
+                  <div class="row">
+                    <div class="col-md-4" *ngFor="let day of workingDays">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" 
+                               [id]="'day-' + day.value"
+                               [checked]="isWorkingDay(day.value)"
+                               (change)="onWorkingDaysChange(day.value, $event)">
+                        <label class="form-check-label" [for]="'day-' + day.value">
+                          {{ day.label }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Working Hours -->
+            <h6 class="text-info mb-3">
+              <i class="fas fa-clock me-2"></i>Giờ làm việc
+            </h6>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="morning_start" class="form-label">Sáng từ</label>
+                <select class="form-select" id="morning_start" formControlName="morning_start">
+                  <option *ngFor="let time of timeSlots.slice(0, 8)" [value]="time">{{ time }}</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="morning_end" class="form-label">Sáng đến</label>
+                <select class="form-select" id="morning_end" formControlName="morning_end">
+                  <option *ngFor="let time of timeSlots.slice(0, 8)" [value]="time">{{ time }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="afternoon_start" class="form-label">Chiều từ</label>
+                <select class="form-select" id="afternoon_start" formControlName="afternoon_start">
+                  <option *ngFor="let time of timeSlots.slice(8)" [value]="time">{{ time }}</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="afternoon_end" class="form-label">Chiều đến</label>
+                <select class="form-select" id="afternoon_end" formControlName="afternoon_end">
+                  <option *ngFor="let time of timeSlots.slice(8)" [value]="time">{{ time }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Schedule Settings -->
+            <h6 class="text-info mb-3">
+              <i class="fas fa-cogs me-2"></i>Cài đặt lịch hẹn
+            </h6>
+            <div class="row mb-4">
+              <div class="col-md-4">
+                <label for="break_duration" class="form-label">Thời gian nghỉ (phút)</label>
+                <input type="number" class="form-control" id="break_duration" formControlName="break_duration"
+                       min="15" max="120"
+                       [class.is-invalid]="isFieldInvalid('break_duration', scheduleForm)">
+                <div class="invalid-feedback">{{ getFieldError('break_duration', scheduleForm) }}</div>
+              </div>
+              <div class="col-md-4">
+                <label for="max_patients_per_day" class="form-label">Tối đa bệnh nhân/ngày</label>
+                <input type="number" class="form-control" id="max_patients_per_day" formControlName="max_patients_per_day"
+                       min="1" max="50"
+                       [class.is-invalid]="isFieldInvalid('max_patients_per_day', scheduleForm)">
+                <div class="invalid-feedback">{{ getFieldError('max_patients_per_day', scheduleForm) }}</div>
+              </div>
+              <div class="col-md-4">
+                <label for="advance_booking_days" class="form-label">Đặt trước (ngày)</label>
+                <input type="number" class="form-control" id="advance_booking_days" formControlName="advance_booking_days"
+                       min="1" max="90"
+                       [class.is-invalid]="isFieldInvalid('advance_booking_days', scheduleForm)">
+                <div class="invalid-feedback">{{ getFieldError('advance_booking_days', scheduleForm) }}</div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="button" class="btn btn-outline-secondary me-md-2" (click)="scheduleForm.reset()">
+                <i class="fas fa-undo me-2"></i>Reset
+              </button>
+              <button type="submit" class="btn btn-info" [disabled]="scheduleForm.invalid || saving">
+                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!saving" class="fas fa-save me-2"></i>
+                {{ saving ? 'Đang lưu...' : 'Lưu lịch làm việc' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Password Tab -->
+      <div *ngIf="activeTab === 'password'" class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="mb-0">
+            <i class="fas fa-lock text-warning me-2"></i>
+            Đổi mật khẩu
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+            <div class="mb-3">
+              <label for="current_password" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="current_password" formControlName="current_password"
+                     [class.is-invalid]="isFieldInvalid('current_password', passwordForm)">
+              <div class="invalid-feedback">{{ getFieldError('current_password', passwordForm) }}</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="new_password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="new_password" formControlName="new_password"
+                     [class.is-invalid]="isFieldInvalid('new_password', passwordForm)">
+              <div class="invalid-feedback">{{ getFieldError('new_password', passwordForm) }}</div>
+              <small class="form-text text-muted">Mật khẩu phải có ít nhất 6 ký tự</small>
+            </div>
+
+            <div class="mb-4">
+              <label for="confirm_password" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="confirm_password" formControlName="confirm_password"
+                     [class.is-invalid]="isFieldInvalid('confirm_password', passwordForm)">
+              <div class="invalid-feedback">{{ getFieldError('confirm_password', passwordForm) }}</div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="button" class="btn btn-outline-secondary me-md-2" (click)="passwordForm.reset()">
+                <i class="fas fa-undo me-2"></i>Reset
+              </button>
+              <button type="submit" class="btn btn-warning" [disabled]="passwordForm.invalid || saving">
+                <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!saving" class="fas fa-key me-2"></i>
+                {{ saving ? 'Đang cập nhật...' : 'Đổi mật khẩu' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

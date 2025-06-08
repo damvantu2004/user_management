@@ -1,0 +1,19 @@
+.navbar {
+    height: 72px;
+}
+
+.navbar-brand {
+    font-size: 20px;
+    height: 72px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    color: #6C7EE1;
+}
+.dropdown-account {
+    position: fixed;
+    right: 0;
+    top: 72px !important;
+    left: unset !important;
+}

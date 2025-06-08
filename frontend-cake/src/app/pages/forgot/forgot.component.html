@@ -1,0 +1,39 @@
+<div style="background: #f0f5f9;min-height: 100vh;">
+    <div class="container">
+        <div class="wrapper-form p-4">
+            <h2 class="header"><i class="fa-solid fa-key"></i> Quên mật khẩu </h2>
+
+            <div *ngIf="success.status && !success.hidden" class="alert alert-success">Đổi mật khẩu thành công</div>
+            <div *ngIf="!success.status && !success.hidden" class="alert alert-danger">Đổi mật khẩu thất bại</div>
+            <form #reset="ngForm" (ngSubmit)="onReset(reset)">
+                <div class="mb-3">
+                    <label for="" class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-control" placeholder="••••••" autocomplete="new-password"
+                        name="password" [(ngModel)]="model.password" #password="ngModel" minlength=6 required>
+
+                    <div *ngIf="password.touched && password.errors?.['minlength']" class="text-danger">
+                        Mật khẩu phải lớn hơn 6 kí tự
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="" class="form-label">Nhập lại mật khẩu mới</label>
+                    <input type="password" class="form-control" placeholder="••••••" autocomplete="new-password"
+                        name="password_confirmation" [(ngModel)]="model.password_confirmation"
+                        #password_confirmation="ngModel" minlength=6 required>
+                    <div *ngIf="password_confirmation.touched && !passwordMatching()" class="text-danger">
+                        Mật khẩu không khớp
+                    </div>
+                </div>
+
+
+                <button class="btn btn-custom w-100" type="submit">Xác nhận</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+@if(success.loading){
+<div class="progress-bar-container">
+    <div class="spinner"></div>
+</div>
+}

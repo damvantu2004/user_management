@@ -1,0 +1,94 @@
+<div class="p-4 bg-white rounded-3 w-100">
+    <h2 *ngIf="success.isEditMode">cập nhật người dùng</h2>
+    <h2 *ngIf="!success.isEditMode">Thêm người dùng</h2>
+    <div class="mt-3">
+        <form #edit="ngForm" (ngSubmit)="onEdit(edit)" class="row">
+            <div class="mb-3 col-12 col-sm-6 col-md-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" placeholder="nhap@email.com" autocomplete
+                    [(ngModel)]="model.email" name="email" #email="ngModel" required email
+                    [disabled]="success.isEditMode">
+                <div *ngIf="email.touched">
+                    <p *ngIf="email.errors?.['required']" class="text-danger">Yêu cầu nhập email</p>
+                    <p *ngIf="email.errors?.['email']" class="text-danger">Email không hợp lệ</p>
+                </div>
+            </div>
+
+            <div class="mb-3 col-12 col-sm-6 col-md-3">
+                <label for="name" class="form-label">Họ và tên</label>
+                <input type="text" class="form-control" id="name" placeholder="Pham tien" [(ngModel)]="model.name"
+                    name="name" #name="ngModel" required>
+                <div *ngIf="name.touched">
+                    <p *ngIf="name.errors?.['required']" class="text-danger">Yêu cầu nhập tên</p>
+                </div>
+            </div>
+            <div class="mb-3 col-12 col-sm-6 col-md-3">
+                <label for="role" class="form-label">Vai trò</label>
+                <select class="form-select" id="role" [(ngModel)]="model.role" name="role" #role="ngModel" required>
+                    <option value="admin">Quản trị viên</option>
+                    <option value="user">Người dùng</option>
+                    <option value="doctor">Bác sĩ</option>
+                    <option value="patient">Bệnh nhân</option>
+                </select>
+            </div>
+            <div class="mb-3 col-12 col-sm-6 col-md-3">
+                <label for="" class="form-label">Trạng thái</label>
+                <select class="form-select" name="is_active" [(ngModel)]="model.is_active" #active="ngModel" required>
+                    <option [ngValue]="true">Hoạt động</option>
+                    <option [ngValue]="false">Không hoạt động</option>
+                </select>
+            </div>
+            <div class="mb-3 col-12 col-sm-6 col-md-3">
+                <label for="dateBegin" class="form-label">Ngày tạo</label>
+                <input type="text" class="form-control" id="dateBegin" [value]="formattedCreatedAt" disabled>
+            </div>
+            <div class="mb-3 col-12 col-sm-6 col-md-3">
+                <label for="dateUpdated" class="form-label">Ngày Cập nhật</label>
+                <input type="text" class="form-control" id="dateUpdated" [value]="formattedUpdatedAt" disabled>
+            </div>
+            <div class="mb-3 col-6">
+                <label for="regPassword" class="form-label">Mật khẩu</label>
+                <input type="password" class="form-control" id="regPassword" placeholder="••••••" #password1="ngModel"
+                    [(ngModel)]="model.password" autocomplete="new-password" name="password" required minlength=6
+                    [disabled]="disablePassword && success.isEditMode">
+                <i *ngIf="success.isEditMode" class="fa-solid fa-eye" (click)="disablePass()"></i>
+            </div>
+            <input type="hidden" name="email_verified_at" [(ngModel)]="model.email_verified_at">
+            <input type="hidden" name="id" [(ngModel)]="model.id">
+            <div>
+                <button class="btn btn-main m-2" type="submit">
+                    <i class="fas fa-save me-2"></i>Lưu
+                </button>
+                <button class="btn btn-outline-secondary" routerLink="/dashboard/users">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<app-modal [isVisible]="success.showModal" (closeModal)="onClose()">
+    <!-- (closeModal)="closeModal()" -->
+    <!-- Template cho phần body của modal -->
+    <ng-template #modalBody>
+        <div class="text-center">
+            <div *ngIf="success.modalTitle" class="mb-3">
+                <i class="fas fa-check-circle text-success text-lg" style="font-size: 6rem;"></i>
+            </div>
+
+            <div *ngIf="!success.modalTitle" class="mb-3">
+                <i class="fas fa-times-circle text-danger" style="font-size: 3rem;"></i>
+            </div>
+            <p *ngIf="success.modalTitle" class="small text-muted mt-2">
+                Thêm thành công bạn sẽ được chuyển hướng tự động sau 2 giây...
+            </p>
+            <div *ngIf="!success.modalTitle">
+                <h2>Lỗi:</h2>
+                @for (e of success.message; track $index) {
+                <p>{{ e }}</p>
+                }
+            </div>
+        </div>
+    </ng-template>
+</app-modal>

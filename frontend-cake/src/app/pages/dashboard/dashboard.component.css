@@ -1,0 +1,36 @@
+.wrapper {
+    height: 100%;
+}
+
+
+app-header{
+    height: 72px;
+    width: 100%;
+}
+
+
+.content {
+    padding: 1.5rem;
+    background-color: #f0f5f9;
+}
+
+.main-content {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.admin-content {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Mobile responsive */
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+

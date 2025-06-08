@@ -1,0 +1,55 @@
+
+
+
+/* You can add global styles to this file, and also import other style files */
+.btn-main {
+    background-color: #6C7EE1;
+    color: #fff;
+}
+
+/* Table Optimizations */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Status Badge */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+/* Button Optimizations */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Add will-change for better performance */
+tr {
+    will-change: transform;
+}
+
+/* Optional: Add virtual scrolling for large datasets */
+.table-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.detail,
+.update,
+.delete {
+    font-size: 20px;
+}
+
+.update,
+.delete {
+    margin-left: 20px;
+}
+
+.info-row{
+    margin: 20px 0;
+}
+
+.w-30{
+    width: 30%;
+}

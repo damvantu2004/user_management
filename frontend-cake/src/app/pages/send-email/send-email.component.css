@@ -1,0 +1,66 @@
+.wrapper-form{
+    width: 100%;
+    max-width: 420px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+.container{
+    min-height:100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+}
+.btn-custom {
+    background-color: #6C7EE1;
+    color: white;
+}
+
+.btn-custom:hover {
+    background-color: #6C7EE1;
+}
+.header{
+    font-weight: 600;
+    opacity:0.8
+}
+
+
+.progress-bar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #6C7EE1; /* Màu chủ đạo từ sidebar của bạn */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Thêm hiệu ứng mờ xung quanh */
+.spinner::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    border-radius: 50%;
+    background: rgba(108, 126, 225, 0.1); /* Màu chủ đạo với độ trong suốt */
+}

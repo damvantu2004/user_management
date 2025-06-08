@@ -1,0 +1,286 @@
+<div class="d-flex">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1">
+    <div class="container-fluid py-4">
+      <!-- Header -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="mb-1">Thông tin cá nhân</h2>
+              <p class="text-muted mb-0">Quản lý thông tin và cài đặt tài khoản của bạn</p>
+            </div>
+            <button type="button" class="btn btn-outline-secondary" routerLink="/patient-dashboard">
+              <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success/Error Message -->
+      <div *ngIf="message" class="row mb-4">
+        <div class="col-12">
+          <div [class]="'alert alert-' + (messageType === 'success' ? 'success' : 'danger') + ' alert-dismissible fade show'">
+            <i [class]="'fas ' + (messageType === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle') + ' me-2'"></i>
+            {{ message }}
+            <button type="button" class="btn-close" (click)="message = ''"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Profile Summary Card -->
+        <div class="col-lg-4">
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-user-circle me-2"></i>
+                Thông tin tóm tắt
+              </h5>
+            </div>
+            <div class="card-body text-center">
+              <div class="profile-avatar mx-auto mb-3">
+                <i class="fas fa-user-circle fa-4x text-primary"></i>
+              </div>
+              <h5 class="fw-bold">{{ currentUser?.name }}</h5>
+              <p class="text-muted mb-2">{{ currentUser?.email }}</p>
+              <div *ngIf="profileForm.get('date_of_birth')?.value" class="mb-2">
+                <span class="badge bg-info">
+                  {{ calculateAge() }} tuổi
+                </span>
+              </div>
+              <div *ngIf="profileForm.get('blood_type')?.value" class="mb-3">
+                <span class="badge bg-danger">
+                  Nhóm máu {{ profileForm.get('blood_type')?.value }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+              <h6 class="mb-0">
+                <i class="fas fa-chart-bar me-2"></i>
+                Thống kê
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="stat-item mb-2">
+                <i class="fas fa-calendar-check text-success me-2"></i>
+                <strong>Lịch hẹn hoàn thành:</strong> <span class="text-success">15</span>
+              </div>
+              <div class="stat-item mb-2">
+                <i class="fas fa-clock text-warning me-2"></i>
+                <strong>Lịch hẹn chờ:</strong> <span class="text-warning">2</span>
+              </div>
+              <div class="stat-item">
+                <i class="fas fa-user-md text-primary me-2"></i>
+                <strong>Bác sĩ đã khám:</strong> <span class="text-primary">5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Profile Form -->
+        <div class="col-lg-8">
+          <!-- Tab Navigation -->
+          <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+              <a class="nav-link" 
+                 [class.active]="activeTab === 'profile'"
+                 (click)="setActiveTab('profile')"
+                 style="cursor: pointer;">
+                <i class="fas fa-user me-2"></i>Thông tin cá nhân
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link"
+                 [class.active]="activeTab === 'password'"
+                 (click)="setActiveTab('password')"
+                 style="cursor: pointer;">
+                <i class="fas fa-lock me-2"></i>Đổi mật khẩu
+              </a>
+            </li>
+          </ul>
+
+          <!-- Profile Tab -->
+          <div *ngIf="activeTab === 'profile'" class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="fas fa-edit text-primary me-2"></i>
+                Chỉnh sửa thông tin
+              </h5>
+            </div>
+            <div class="card-body">
+              <div *ngIf="loading" class="text-center py-4">
+                <app-loading></app-loading>
+              </div>
+
+              <form *ngIf="!loading" [formGroup]="profileForm" (ngSubmit)="onSubmitProfile()">
+                <!-- Basic Information -->
+                <h6 class="text-primary mb-3">
+                  <i class="fas fa-info-circle me-2"></i>Thông tin cơ bản
+                </h6>
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="name" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" formControlName="name"
+                           [class.is-invalid]="isFieldInvalid('name')">
+                    <div class="invalid-feedback">{{ getFieldError('name') }}</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" formControlName="email"
+                           [class.is-invalid]="isFieldInvalid('email')">
+                    <div class="invalid-feedback">{{ getFieldError('email') }}</div>
+                  </div>
+                </div>
+
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" id="phone" formControlName="phone"
+                           [class.is-invalid]="isFieldInvalid('phone')">
+                    <div class="invalid-feedback">{{ getFieldError('phone') }}</div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="date_of_birth" class="form-label">Ngày sinh</label>
+                    <input type="date" class="form-control" id="date_of_birth" formControlName="date_of_birth">
+                  </div>
+                </div>
+
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="gender" class="form-label">Giới tính</label>
+                    <select class="form-select" id="gender" formControlName="gender">
+                      <option value="">-- Chọn giới tính --</option>
+                      <option *ngFor="let gender of genders" [value]="gender.value">
+                        {{ gender.label }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="blood_type" class="form-label">Nhóm máu</label>
+                    <select class="form-select" id="blood_type" formControlName="blood_type">
+                      <option value="">-- Chọn nhóm máu --</option>
+                      <option *ngFor="let type of bloodTypes" [value]="type">{{ type }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Contact Information -->
+                <h6 class="text-primary mb-3">
+                  <i class="fas fa-address-book me-2"></i>Thông tin liên hệ
+                </h6>
+                <div class="mb-4">
+                  <label for="address" class="form-label">Địa chỉ</label>
+                  <textarea class="form-control" id="address" formControlName="address" rows="3"
+                            placeholder="Nhập địa chỉ đầy đủ..."></textarea>
+                </div>
+
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="emergency_contact" class="form-label">Người liên hệ khẩn cấp</label>
+                    <input type="text" class="form-control" id="emergency_contact" formControlName="emergency_contact"
+                           placeholder="Tên người liên hệ">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="emergency_phone" class="form-label">SĐT khẩn cấp</label>
+                    <input type="tel" class="form-control" id="emergency_phone" formControlName="emergency_phone"
+                           [class.is-invalid]="isFieldInvalid('emergency_phone')"
+                           placeholder="Số điện thoại">
+                    <div class="invalid-feedback">{{ getFieldError('emergency_phone') }}</div>
+                  </div>
+                </div>
+
+                <!-- Medical Information -->
+                <h6 class="text-primary mb-3">
+                  <i class="fas fa-heartbeat me-2"></i>Thông tin y tế
+                </h6>
+                <div class="mb-4">
+                  <label for="medical_history" class="form-label">Tiền sử bệnh</label>
+                  <textarea class="form-control" id="medical_history" formControlName="medical_history" rows="3"
+                            placeholder="Mô tả các bệnh đã từng mắc..."></textarea>
+                </div>
+
+                <div class="mb-4">
+                  <label for="allergies" class="form-label">Dị ứng</label>
+                  <textarea class="form-control" id="allergies" formControlName="allergies" rows="2"
+                            placeholder="Các loại dị ứng (thuốc, thức ăn, môi trường...)"></textarea>
+                </div>
+
+                <div class="mb-4">
+                  <label for="current_medications" class="form-label">Thuốc đang sử dụng</label>
+                  <textarea class="form-control" id="current_medications" formControlName="current_medications" rows="3"
+                            placeholder="Danh sách thuốc hiện tại..."></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <button type="button" class="btn btn-outline-secondary me-md-2" routerLink="/patient-dashboard">
+                    <i class="fas fa-times me-2"></i>Hủy
+                  </button>
+                  <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || saving">
+                    <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                    <i *ngIf="!saving" class="fas fa-save me-2"></i>
+                    {{ saving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Password Tab -->
+          <div *ngIf="activeTab === 'password'" class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+              <h5 class="mb-0">
+                <i class="fas fa-lock text-warning me-2"></i>
+                Đổi mật khẩu
+              </h5>
+            </div>
+            <div class="card-body">
+              <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()">
+                <div class="mb-3">
+                  <label for="current_password" class="form-label">Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="current_password" formControlName="current_password"
+                         [class.is-invalid]="isFieldInvalid('current_password', passwordForm)">
+                  <div class="invalid-feedback">{{ getFieldError('current_password', passwordForm) }}</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="new_password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="new_password" formControlName="new_password"
+                         [class.is-invalid]="isFieldInvalid('new_password', passwordForm)">
+                  <div class="invalid-feedback">{{ getFieldError('new_password', passwordForm) }}</div>
+                  <small class="form-text text-muted">Mật khẩu phải có ít nhất 6 ký tự</small>
+                </div>
+
+                <div class="mb-4">
+                  <label for="confirm_password" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="confirm_password" formControlName="confirm_password"
+                         [class.is-invalid]="isFieldInvalid('confirm_password', passwordForm)">
+                  <div class="invalid-feedback">{{ getFieldError('confirm_password', passwordForm) }}</div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <button type="button" class="btn btn-outline-secondary me-md-2" (click)="passwordForm.reset()">
+                    <i class="fas fa-undo me-2"></i>Reset
+                  </button>
+                  <button type="submit" class="btn btn-warning" [disabled]="passwordForm.invalid || saving">
+                    <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                    <i *ngIf="!saving" class="fas fa-key me-2"></i>
+                    {{ saving ? 'Đang cập nhật...' : 'Đổi mật khẩu' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

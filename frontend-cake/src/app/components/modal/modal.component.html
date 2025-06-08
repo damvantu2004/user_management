@@ -1,0 +1,22 @@
+<div class="modal-backdrop" *ngIf="isVisible" (click)="close()">
+    <div class="modal-container" [ngClass]="getModalSizeClass()" (click)="stopPropagation($event)">
+        <div class="modal-header">
+            <h3 class="modal-title">{{ title }}</h3>
+            <button type="button" class="btn-close" (click)="close()"></button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Sử dụng nội dung được truyền vào từ bên ngoài -->
+            <ng-container *ngIf="modalBodyTemplate">
+                <ng-container *ngTemplateOutlet="modalBodyTemplate"></ng-container>
+            </ng-container>
+
+            <!-- Nội dung mặc định nếu không có template được truyền vào -->
+            <ng-container *ngIf="!modalBodyTemplate">
+                <p>Không có nội dung</p>
+            </ng-container>
+        </div>
+
+
+    </div>
+</div>

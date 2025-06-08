@@ -1,0 +1,171 @@
+<!-- main content -->
+<div class="p-4 bg-white rounded-3 w-100">
+
+    <!-- Loading Skeleton -->
+    @if (loading) {
+    <app-loading></app-loading>
+    } @else {
+    <div class="d-flex justify-content-between mb-4">
+        <form class="row w-75" #search="ngForm" (ngSubmit)="onSearch(search)" method="get">
+            <div class="col-3">
+                <input type="text" class="form-control" placeholder="nhập tên hoặc email" name="search"
+                    [(ngModel)]="searchParam.name">
+            </div>
+            <div class="col-3">
+                <select class="form-control text-center" name="role" id="" [(ngModel)]="searchParam.role">
+                    <option value="">--Vai trò--</option>
+                    <option value="admin">Quản trị viên</option>
+                    <option value="user">Người dùng</option>
+                    <option value="doctor">Bác sĩ</option>
+                    <option value="patient">Bệnh nhân</option>
+                </select>
+            </div>
+            <div class="col-3">
+                <select class="form-control text-center" name="is_active" id="" [(ngModel)]="searchParam.is_active">
+                    <option value="">--Trạng thái--</option>
+                    <option value="1">Hoạt động</option>
+                    <option value="0">không hoạt động</option>
+                </select>
+            </div>
+
+
+
+            <button class="btn btn-main col-1 mx-2" type="submit">
+                <i class="fa-brands fa-searchengin"></i>
+            </button>
+        </form>
+        <button class="btn btn-main" routerLink="/dashboard/users/add">
+            <i class="fa-solid fa-plus"></i>
+            Thêm
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Họ và tên</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col">Vai trò</th>
+                    <th scope="col">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (users.data.length === 0) {
+                <tr>
+                    <td colspan="5" class="text-center">Không có dữ liệu</td>
+                </tr>
+                } @else {
+                @for (user of users.data; track user.id) {
+                <tr>
+                    <th scope="row">{{user.id}}</th>
+                    <td>{{user.name}}</td>
+                    <td>{{user.email}}</td>
+                    <td>
+                        <span [class]="user.is_active ? 'badge bg-success' : 'badge bg-danger'">
+                            {{user.is_active ? 'Hoạt động' : 'Không hoạt động'}}
+                        </span>
+                    </td>
+                    <td>
+                        @switch (user.role) {
+                            @case ('admin') { Quản trị viên }
+                            @case ('doctor') { Bác sĩ }
+                            @case ('patient') { Bệnh nhân }
+                            @default { Người dùng }
+                        }
+                    </td>
+                    <td>
+                        <a class="btn btn-success btn-sm m-1" (click)="onDetail(user.id)">Xem</a>
+                        <a [routerLink]="['/dashboard/users/edit', user.id]" class="btn btn-warning btn-sm m-1">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <button class="btn btn-danger btn-sm m-1" (click)="deleteUser(user.id)">Xóa</button>
+                    </td>
+                </tr>
+                }
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+    <app-pagination [currentPage]="users.current_page" [totalPages]="users.last_page" [disabled]="disablePagination"
+        (pageChange)="getCurrentPage($event)"></app-pagination>
+</div>
+
+<app-modal *ngIf="selectedUser" [isVisible]="showModal" [title]="'Thông tin người dùng'" [size]="'lg'"
+    (closeModal)="onClose()">
+    <!-- (closeModal)="closeModal()" -->
+    <!-- Template cho phần body của modal -->
+    <ng-template #modalBody>
+        <div class="user-info row justify-content-evenly">
+            <div class="col-5 p-4">
+                <div class="info-row">
+                    <div class="info-label">ID: {{ selectedUser.id || 'N/A' }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Họ và tên: {{ selectedUser.name || 'N/A' }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Email: {{ selectedUser.email || 'N/A' }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Vai trò: 
+                        @switch (selectedUser.role) {
+                            @case ('admin') { Quản trị viên }
+                            @case ('doctor') { Bác sĩ }
+                            @case ('patient') { Bệnh nhân }
+                            @default { Người dùng }
+                        }
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Trạng thái:
+                        <span [class]="selectedUser.is_active ? 'badge bg-success' : 'badge bg-danger'">
+                            {{ selectedUser.is_active ? 'Hoạt động' : 'Không hoạt động' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 p-4">
+                <div class="info-row">
+                    <div class="info-label">Ngày tạo:</div>
+                    <div class="info-value">{{ selectedUser.created_at }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Ngày cập nhật:</div>
+                    <div class="info-value">{{ selectedUser.updated_at }}</div>
+                </div>
+            </div>
+
+
+        </div>
+    </ng-template>
+</app-modal>
+
+
+<app-modal [isVisible]="success_delete.showModal" (closeModal)="onClose()">
+    <!-- (closeModal)="closeModal()" -->
+    <!-- Template cho phần body của modal -->
+    <ng-template #modalBody>
+        <div class="text-center">
+            <div *ngIf="success_delete.modalTitle" class="mb-3">
+                <i class="fas fa-check-circle text-success text-lg" style="font-size: 6rem;"></i>
+            </div>
+
+            <div *ngIf="!success_delete.modalTitle" class="mb-3">
+                <i class="fas fa-times-circle text-danger" style="font-size: 3rem;"></i>
+            </div>
+            <div *ngIf="success_delete.modalTitle">
+                <h2>Xóa thành công</h2>
+            </div>
+            <div *ngIf="!success_delete.modalTitle">
+                <h2>Lỗi:</h2>
+                @for (e of success_delete.message; track $index) {
+                <p>{{ e }}</p>
+                }
+            </div>
+        </div>
+    </ng-template>
+</app-modal>

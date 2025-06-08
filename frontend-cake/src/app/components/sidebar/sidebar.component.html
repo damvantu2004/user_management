@@ -1,0 +1,80 @@
+<nav class="sidebar" [class.show]="isShow">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+    <div class="d-flex align-items-center">
+      <i [class]="'me-2 ' + roleIcon + ' text-white'"></i>
+      <div>
+        <h6 class="mb-0 text-white">{{ roleTitle }}</h6>
+        <small class="text-white-50">{{ roleName }}</small>
+      </div>
+    </div>
+    <button type="button" class="btn-close btn-close-white d-lg-none" (click)="toggleSidebar()"></button>
+  </div>
+
+  <!-- User Info -->
+  <div class="user-info p-3 border-bottom border-white border-opacity-25">
+    <div class="d-flex align-items-center">
+      <div class="user-avatar me-3">
+        <i [class]="roleIcon + ' fa-2x text-' + roleColor"></i>
+      </div>
+      <div class="flex-grow-1">
+        <h6 class="mb-1 text-white">{{ currentUser?.name }}</h6>
+        <small class="text-white-75">{{ currentUser?.email }}</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <div class="navigation-menu p-3 flex-grow-1">
+    <ul class="nav nav-pills flex-column">
+      <li class="nav-item" *ngFor="let item of navigationItems">
+        <!-- Divider -->
+        <hr *ngIf="item.divider" class="my-2 border-white border-opacity-25">
+        
+        <!-- Navigation Link -->
+        <a *ngIf="!item.divider"
+           class="nav-link d-flex align-items-center"
+           [routerLink]="item.url"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{exact: false}">
+          <i [class]="item.icon + ' me-2'"></i>
+          {{ item.label }}
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Quick Actions (if available) -->
+  <div *ngIf="quickActions.length > 0" class="quick-actions p-3 border-top border-white border-opacity-25">
+    <h6 class="text-white-75 mb-2">
+      <i class="fas fa-bolt me-2"></i>Thao tác nhanh
+    </h6>
+    <div class="d-grid gap-1">
+      <a *ngFor="let action of quickActions.slice(0, 2)" 
+         [routerLink]="action.url" 
+         class="btn btn-sm btn-outline-light">
+        <i [class]="action.icon + ' me-2'"></i>{{ action.label }}
+      </a>
+    </div>
+  </div>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer p-3 border-top border-white border-opacity-25">
+    <div class="d-grid gap-2">
+      <a [routerLink]="getDashboardUrl()" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-home me-2"></i>Trang chủ
+      </a>
+      <button type="button" class="btn btn-light btn-sm" (click)="logout()">
+        <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay" [class.show]="isShow" (click)="toggleSidebar()"></div>
+
+<!-- Sidebar Toggle Button -->
+<button type="button" class="sidebar-toggle d-lg-none" (click)="toggleSidebar()">
+  <i class="fas fa-bars"></i>
+</button>
