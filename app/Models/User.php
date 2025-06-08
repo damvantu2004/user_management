@@ -25,8 +25,9 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',         // Tên người dùng
         'email',        // Email (duy nhất)
+        'phone',        // ← Thêm phone
         'password',     // Mật khẩu (được hash tự động)
-        'role',         // Vai trò: 'admin' hoặc 'user'
+        'role',         // Vai trò: 'admin', 'user', 'doctor', 'patient'
         'is_active',    // Trạng thái hoạt động (true/false)
     ];
 
@@ -106,4 +107,14 @@ class User extends Authenticatable implements JWTSubject
      * - public function posts() { ... }
      * - public function passwordResetTokens() { ... }
      */
+
+    public function doctor()
+    {
+        return $this->hasOne(\App\Modules\Doctor\Models\Doctor::class);
+    }
+
+    public function patient()
+    {
+        return $this->hasOne(\App\Modules\Patient\Models\Patient::class);
+    }
 }

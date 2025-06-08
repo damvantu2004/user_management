@@ -93,8 +93,8 @@ class UserService
         return DB::transaction(function () use ($id, $data) {
             $user = $this->findUser($id);
 
-            // Prevent changing email to one that's already taken
-            if (isset($data['email']) && $data['email'] !== $user->email) {
+            // neu email thay doi thi kiem tra xem co trung khong?
+            if ($data['email'] !== $user->email) {
                 $existingUser = User::where('email', $data['email'])->first();
                 if ($existingUser) {
                     throw ValidationException::withMessages([
@@ -103,12 +103,11 @@ class UserService
                 }
             }
 
-            // Prevent deactivating the last admin
+            // nếu tài khoản admin mà đang hoạt động thì không cho phép sửa trạng thái
             if (
-                isset($data['is_active']) && 
-                $data['is_active'] === false && 
-                $user->role === 'admin' && 
-                $user->is_active && 
+                ($data['is_active'] === false || $data['role'] === 'user') &&
+                $user->role === 'admin' &&
+                $user->is_active &&
                 User::where('role', 'admin')->where('is_active', true)->count() <= 1
             ) {
                 throw ValidationException::withMessages([
@@ -116,6 +115,7 @@ class UserService
                 ]);
             }
 
+            // nếu không gửi mật khẩu từ form thì không cập nhật mật khẩu
             if (isset($data['password']) && !empty($data['password'])) {
                 $user->password = $data['password']; // Sẽ được hash tự động bởi mutator
                 unset($data['password']); // Loại bỏ password khỏi mảng data để tránh ghi đè
@@ -201,5 +201,3 @@ class UserService
         });
     }
 }
-
-

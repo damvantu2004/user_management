@@ -4,15 +4,28 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\DB;
 
 class Kernel extends ConsoleKernel
 {
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule): void
+    protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Dọn dẹp token xác thực email hết hạn hàng ngày
+        $schedule->call(function () {
+            DB::table('email_verification_tokens')
+                ->where('created_at', '<', now()->subMinutes(60)) // hết hạn sau 60 phút thì xóa
+                ->delete();
+        })->daily();
+        
+        // Dọn dẹp token reset mật khẩu hết hạn hàng ngày
+        $schedule->call(function () {
+            DB::table('password_reset_tokens')
+                ->where('created_at', '<', now()->subMinutes(60))
+                ->delete();
+        })->daily();
     }
 
     /**
@@ -25,3 +38,4 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
+

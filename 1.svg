@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>System Architecture Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <div class="mermaid">
+        flowchart LR
+        %% CLIENT
+        subgraph ClientApps["Ứng dụng Người Dùng"]
+            direction LR
+            PatientApp["Patient App (Web/Mobile)"] --> DoctorPortal["Doctor Portal"] --> AdminDash["Admin Dashboard"]
+        end
+
+        %% SECURITY
+        subgraph Security["Security Layer"]
+            direction LR
+            SSL["SSL/TLS"] --> WAF["Web Application Firewall"]
+        end
+
+        %% API Gateway &amp; LB
+        APIGW["API Gateway"] --> LB["Load Balancer"] --> Cache["Redis Cache"]
+
+        %% MODULES
+        subgraph Modules["Modules"]
+            direction LR
+            subgraph PatientMod["Bệnh nhân"]
+                direction LR
+                P_API["API"] --> P_SVC["Service"] --> P_REPO["Repo"]
+            end
+            subgraph AppointMod["Đặt lịch"]
+                direction LR
+                A_API["API"] --> A_SVC["Service"] --> A_REPO["Repo"]
+            end
+            subgraph RecordMod["Hồ sơ SK"]
+                direction LR
+                R_API["API"] --> R_SVC["Service"] --> R_REPO["Repo"]
+            end
+            subgraph NotifyMod["Nhắc nhở"]
+                direction LR
+                N_API["API"] --> N_SVC["Service"] --> N_REPO["Repo"]
+            end
+            subgraph ReportMod["Báo cáo"]
+                direction LR
+                RP_API["API"] --> RP_SVC["Service"] --> RP_REPO["Repo"]
+            end
+        end
+
+        %% SHARED
+        subgraph Shared["Shared Services"]
+            direction LR
+            Auth["Auth"] --> Logging["Logging"] --> Config["Config"] --> Monitoring["Monitoring / Health Check"]
+        end
+
+        %% EXTERNAL
+        subgraph ExternalNotify["External Notification"]
+            direction LR
+            Email["Email"] --> SMS["SMS"]
+        end
+
+        %% DB
+        subgraph DB["Database"]
+            direction LR
+            MainDB["Primary DB"] --> BackupDB["Backup DB"]
+        end
+
+        %% Mobile &amp; Backend
+        subgraph Mobile
+            direction LR
+            LC[Local Cache] --> SD[Sync Manager]
+        end
+        subgraph Backend
+            direction LR
+            Queue[Message Queue] --> Pools[Resource Pools]
+        end
+
+        %% FLOW
+        LC -->|Periodic Sync| SD -->|Batch Updates| Queue --> Pools
+        ClientApps --> SSL --> WAF --> APIGW --> LB --> Cache
+        Cache -->|Cache Miss| PatientMod &amp; AppointMod &amp; RecordMod &amp; NotifyMod &amp; ReportMod
+
+        P_API --> P_SVC --> P_REPO
+        A_API --> A_SVC --> A_REPO
+        R_API --> R_SVC --> R_REPO
+        N_API --> N_SVC --> N_REPO
+        RP_API --> RP_SVC --> RP_REPO
+
+        N_SVC --> ExternalNotify
+        ExternalNotify --> Email &amp; SMS
+
+        P_REPO &amp; A_REPO &amp; R_REPO &amp; N_REPO &amp; RP_REPO --> MainDB
+        MainDB --> BackupDB
+        Modules --> Shared --> MainDB
+
+        %% Styling
+        classDef infraStyle fill:#e6f3ff,stroke:#333
+        classDef securityStyle fill:#ffe6e6,stroke:#333
+        classDef moduleStyle fill:#f0f0f0,stroke:#333
+        classDef dbStyle fill:#e6ffe6,stroke:#333
+
+        class DB dbStyle
+        class Modules moduleStyle
+        class Security securityStyle
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

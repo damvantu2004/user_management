@@ -72,6 +72,14 @@ Dự án này là một API quản lý người dùng được xây dựng bằn
     - Deployment process
     - Monitoring và logging
 
+12. [Thêm module Đặt lịch và Shared Services](#12-thêm-module-đặt-lịch-và-shared-services)
+    - Tạo model và migration cho Appointment
+    - Xây dựng AppointmentController
+    - Tạo AppointmentService
+    - Định nghĩa routes cho module đặt lịch
+    - Sử dụng lại các Shared Services
+    - Kiểm thử API đặt lịch
+    - Seed dữ liệu mẫu
 
 ## API Endpoints
 
@@ -95,6 +103,14 @@ Dự án này là một API quản lý người dùng được xây dựng bằn
 - `POST /api/password/forgot` - Gửi email đặt lại mật khẩu
 - `POST /api/password/reset` - Đặt lại mật khẩu
 
+### Đặt lịch
+
+- `GET /api/appointments` - Lấy danh sách lịch hẹn (yêu cầu xác thực)
+- `POST /api/appointments` - Tạo lịch hẹn mới (yêu cầu xác thực)
+- `GET /api/appointments/{id}` - Xem chi tiết lịch hẹn (yêu cầu xác thực)
+- `PUT /api/appointments/{id}` - Cập nhật lịch hẹn (yêu cầu xác thực)
+- `DELETE /api/appointments/{id}` - Hủy lịch hẹn (yêu cầu xác thực)
+
 ## Cấu trúc dữ liệu
 
 ### Bảng users
@@ -102,12 +118,12 @@ Dự án này là một API quản lý người dùng được xây dựng bằn
 - name (string)
 - email (string, unique)
 - password (string, hashed)
-- role (enum: 'admin', 'user')
+- phone (string, nullable)
+- role (enum: 'admin', 'doctor', 'patient')
 - is_active (boolean)
 - remember_token (string, nullable)
-- email_verified_at (timestamp, nullable)
-- created_at (timestamp)
-- updated_at (timestamp)
+- email_verified_at (timestamp)
+- created_at, updated_at (timestamps)
 
 ### Bảng password_reset_tokens
 - email (primary key)
@@ -118,6 +134,52 @@ Dự án này là một API quản lý người dùng được xây dựng bằn
 - email (primary key)
 - token (string)
 - created_at (timestamp)
+
+### Bảng appointments
+- id (primary key)
+- patient_id (foreign key references patients)
+- doctor_id (foreign key references doctors)
+- appointment_date (date)
+- appointment_time (time)
+- status (enum: 'pending', 'confirmed', 'completed', 'cancelled')
+- reason (text) - lý do khám
+- notes (text, nullable) - ghi chú của bác sĩ
+- created_at, updated_at
+
+### Bảng doctors
+- id (primary key)
+- user_id (foreign key references users)
+- specialty (string) - chuyên khoa
+- qualification (string) - bằng cấp
+- experience_years (integer)
+- consultation_fee (decimal) - phí khám
+- bio (text, nullable) - giới thiệu
+- is_available (boolean) - có nhận bệnh không
+- created_at, updated_at (timestamps)
+
+### Bảng departments
+- id (primary key)
+- name (string) - tên khoa
+- description (text, nullable)
+- created_at, updated_at (timestamps)
+
+### Bảng patients
+- id (primary key)
+- user_id (foreign key references users)
+- date_of_birth (date)
+- gender (enum: 'male', 'female', 'other')
+- address (text)
+- emergency_contact (string, nullable)
+- created_at, updated_at
+
+### Bảng doctor_schedules
+- id (primary key)
+- doctor_id (foreign key references doctors)
+- day_of_week (integer) - 0=CN, 1=T2, ...
+- start_time (time)
+- end_time (time)
+- is_available (boolean)
+- created_at, updated_at
 
 ## Bảo mật
 

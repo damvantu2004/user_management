@@ -72,7 +72,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'sometimes|in:admin,user',
+            'role' => 'sometimes|in:admin,user,doctor,patient', // ← Updated
             'is_active' => 'sometimes|boolean',
         ]);
 
@@ -129,12 +129,11 @@ class UserController extends Controller
             $validatedData = $request->validate([
                 'name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|max:255',
-                'role' => 'sometimes|in:admin,user',
+                'role' => 'sometimes|in:admin,user,doctor,patient', // ← Updated
                 'is_active' => 'sometimes|boolean',
                 'password' => 'sometimes|string|min:8',
-
             ]);
-
+            
             $user = $this->userService->updateUser($id, $validatedData);
             return $this->successResponse($user, 'Cập nhật thông tin người dùng thành công');
         } catch (ModelNotFoundException $e) {

@@ -2,9 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use App\Modules\Auth\Controllers\AuthController;
+use App\Modules\Auth\Controllers\PasswordResetController;
+use App\Modules\Patient\Controllers\PatientController;
+use App\Modules\Doctor\Controllers\DoctorController;
+use App\Modules\Appointment\Controllers\AppointmentController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,38 +25,73 @@ Route::post('password/reset', [PasswordResetController::class, 'reset']); // Đ�
 
 /*
 |--------------------------------------------------------------------------
-| Routes yêu cầu xác thực (Protected Routes)
+| Public Routes
 |--------------------------------------------------------------------------
-| Những routes này yêu cầu người dùng phải đăng nhập và tài khoản phải active
-| Sử dụng 2 middleware:
-| - auth:api: Kiểm tra JWT token hợp lệ
-| - active: Kiểm tra tài khoản đã được kích hoạt
 */
-Route::middleware(['auth:api', 'active'])->group(function () {
-    // Quản lý xác thực
-    Route::post('logout', [AuthController::class, 'logout']); // Đăng xuất
-    Route::post('refresh', [AuthController::class, 'refresh']); // Làm mới token JWT
-    Route::get('me', [AuthController::class, 'me']); // Lấy thông tin người dùng hiện tại
-});
+Route::get('doctors', [DoctorController::class, 'index']);
+Route::get('doctors/{id}', [DoctorController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
-| Routes dành cho Admin
+| Protected Routes - Require Authentication
 |--------------------------------------------------------------------------
-| Những routes này chỉ admin mới có quyền truy cập
-| Sử dụng 3 middleware:
-| - auth:api: Kiểm tra JWT token hợp lệ
-| - active: Kiểm tra tài khoản đã được kích hoạt
-| - admin: Kiểm tra người dùng có quyền admin
 */
-Route::middleware(['auth:api', 'active', 'admin'])->group(function () {
-    // Quản lý người dùng (chỉ admin mới có quyền)
-    Route::prefix('users')->group(function () {
-        Route::get('/', [UserController::class, 'index']); // Lấy danh sách tất cả người dùng
-        Route::post('/', [UserController::class, 'store']); // Lấy danh sách tất cả người dùng
-        Route::get('/{id}', [UserController::class, 'show']); // Xem chi tiết một người dùng
-        Route::put('/{id}', [UserController::class, 'update']); // Cập nhật thông tin người dùng
-        Route::delete('/{id}', [UserController::class, 'destroy']); // Xóa người dùng
+Route::middleware(['auth:api', 'active'])->group(function () {
+    // Auth management
+    Route::post('logout', [AuthController::class, 'logout']); // Đăng xuất
+    Route::post('refresh', [AuthController::class, 'refresh']); // Làm mới token JWT
+    Route::get('me', [AuthController::class, 'me']); // Lấy thông tin người dùng hiện tại
+
+    /*
+    |--------------------------------------------------------------------------
+    | Patient Only Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['patient'])->group(function () {
+        // Patient profile management
+        Route::get('patients/me', [PatientController::class, 'profile']);
+        Route::put('patients/me', [PatientController::class, 'updateProfile']);
+        
+        // Patient appointment management
+        Route::post('appointments', [AppointmentController::class, 'store']); // Đặt lịch
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Doctor Only Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['doctor'])->group(function () {
+        // Doctor view patients
+        Route::get('patients', [PatientController::class, 'index']);
+        Route::get('patients/{id}', [PatientController::class, 'show']);
+        
+        // Doctor manage appointments
+        Route::put('appointments/{id}', [AppointmentController::class, 'update']); // Xác nhận lịch
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Both Patient & Doctor Routes
+    |--------------------------------------------------------------------------
+    */
+    // View appointments (filtered by role)
+    Route::get('appointments', [AppointmentController::class, 'index']);
+    Route::get('appointments/{id}', [AppointmentController::class, 'show']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Only Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['admin'])->group(function () {
+        Route::prefix('users')->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::post('/', [UserController::class, 'store']);
+            Route::get('/{id}', [UserController::class, 'show']);
+            Route::put('/{id}', [UserController::class, 'update']);
+            Route::delete('/{id}', [UserController::class, 'destroy']);
+        });
     });
 });
 

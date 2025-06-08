@@ -11,7 +11,8 @@ class AdminRoleMiddleware
     /**
      * Xử lý request, chỉ cho phép admin truy cập.
      */
-    public function handle(Request $request, Closure $next)
+
+    public function handle(Request $request, Closure $next) // Closure là một hàm callback, next là một hàm callback được truyền vào middleware để xử lý request tiếp theo
     {
         $user = Auth::guard('api')->user();
         if (!$user || $user->role !== 'admin') {
